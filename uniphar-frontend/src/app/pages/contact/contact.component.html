@@ -1,0 +1,23 @@
+<app-navbar />
+<div *ngIf="loading" style="padding: 60px 32px; text-align: center; color: #666;">Loading...</div>
+<div *ngIf="error" style="padding: 60px 32px; text-align: center; color: red;">{{ error }}</div>
+<ng-container *ngIf="contact && !loading">
+  <app-hero heading="Contact Us" subtext="Get in touch with the Uniphar team"></app-hero>
+  <section style="padding: 60px 32px; max-width: 800px; margin: 0 auto;">
+    <div style="display: grid; gap: 24px;">
+      <div *ngIf="contact.address" style="display: flex; gap: 16px; align-items: flex-start;">
+        <strong style="min-width: 80px; color: #1b264f;">Address</strong>
+        <span style="color: #444;">{{ contact.address }}</span>
+      </div>
+      <div *ngIf="contact.phone" style="display: flex; gap: 16px; align-items: center;">
+        <strong style="min-width: 80px; color: #1b264f;">Phone</strong>
+        <span style="color: #444;">{{ contact.phone }}</span>
+      </div>
+      <div *ngIf="contact.email" style="display: flex; gap: 16px; align-items: center;">
+        <strong style="min-width: 80px; color: #1b264f;">Email</strong>
+        <a [href]="'mailto:' + contact.email" style="color: #0066cc;">{{ contact.email }}</a>
+      </div>
+    </div>
+  </section>
+</ng-container>
+<app-footer />

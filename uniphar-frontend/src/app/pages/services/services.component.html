@@ -1,0 +1,16 @@
+<app-navbar />
+<div *ngIf="loading" style="padding: 60px 32px; text-align: center; color: #666;">Loading...</div>
+<div *ngIf="error" style="padding: 60px 32px; text-align: center; color: red;">{{ error }}</div>
+<ng-container *ngIf="!loading && !error">
+  <app-hero heading="Our Services" subtext="Innovative solutions for healthcare professionals"></app-hero>
+  <section style="padding: 60px 32px; max-width: 1200px; margin: 0 auto;">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px;">
+      <div *ngFor="let service of services" style="background: white; border-radius: 8px; padding: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+        <h3 style="font-size: 20px; font-weight: 600; color: #1b264f; margin: 0 0 12px;">{{ service.title }}</h3>
+        <p style="color: #666; margin: 0 0 20px;" [innerHTML]="service.description"></p>
+        <a [routerLink]="['/', brandSlug, 'services', service.slug]" style="color: #0066cc; text-decoration: none; font-weight: 500;">Read More →</a>
+      </div>
+    </div>
+  </section>
+</ng-container>
+<app-footer />

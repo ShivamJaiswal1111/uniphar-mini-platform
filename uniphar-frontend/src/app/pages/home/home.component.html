@@ -1,0 +1,17 @@
+<app-navbar />
+<div *ngIf="loading" style="padding: 60px 32px; text-align: center; color: #666;">Loading...</div>
+<div *ngIf="error" style="padding: 60px 32px; text-align: center; color: red;">{{ error }}</div>
+<ng-container *ngIf="page && !loading">
+  <app-hero
+    [heading]="page.heroHeading"
+    [subtext]="page.heroSubtext"
+    [imageUrl]="page.heroImageUrl"
+    ctaText="Learn More"
+    ctaLink="/about">
+  </app-hero>
+  <section style="padding: 60px 32px; max-width: 1200px; margin: 0 auto;">
+    <h2 style="font-size: 28px; font-weight: 600; color: #1b264f; margin-bottom: 16px;">{{ page.title }}</h2>
+    <p style="color: #444; font-size: 16px; line-height: 1.6;">{{ page.bodyContent }}</p>
+  </section>
+</ng-container>
+<app-footer />
