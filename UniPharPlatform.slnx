@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="UniPharApi/UniPharApi.csproj" />
+  <Project Path="UniPharGroup/UniPharGroup.csproj" />
+</Solution>

@@ -1,0 +1,6 @@
+@UniPharApi_HostAddress = http://localhost:5220
+
+GET {{UniPharApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

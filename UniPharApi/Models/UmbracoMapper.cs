@@ -1,0 +1,308 @@
+using System.Text.Json;
+
+namespace UniPharApi.Models;
+
+public static class UmbracoMapper
+{
+    public static BrandModel MapToBrand(string rawJson, string requestedCulture)
+    {
+        using var doc = JsonDocument.Parse(rawJson);
+        var root = doc.RootElement;
+        var props = root.GetProperty("properties");
+
+        return new BrandModel
+        {
+            Id = root.GetProperty("id").GetString() ?? string.Empty,
+            Name = root.GetProperty("name").GetString() ?? string.Empty,
+            Slug = ExtractSlug(root),
+            LogoUrl = ExtractFirstMediaUrl(props, "ogImage"),
+            PrimaryColor = GetStringOrNull(props, "brandColor"),
+            Culture = requestedCulture
+        };
+    }
+
+    public static List<BrandModel> MapToBrandList(string rawJson, string culture = "en-US")
+    {
+        using var doc = JsonDocument.Parse(rawJson);
+        var root = doc.RootElement;
+        var results = new List<BrandModel>();
+
+        if (!root.TryGetProperty("items", out var items) || items.ValueKind != JsonValueKind.Array)
+            return results;
+
+        foreach (var item in items.EnumerateArray())
+        {
+            var props = item.GetProperty("properties");
+
+            results.Add(new BrandModel
+            {
+                Id = item.GetProperty("id").GetString() ?? string.Empty,
+                Name = item.GetProperty("name").GetString() ?? string.Empty,
+                Slug = ExtractSlug(item),
+                LogoUrl = ExtractFirstMediaUrl(props, "ogImage"),
+                PrimaryColor = GetStringOrNull(props, "brandColor"),
+                Culture = culture
+            });
+        }
+
+        return results;
+    }
+
+    public static PageModel MapToPage(string rawJson, string requestedCulture)
+    {
+        using var doc = JsonDocument.Parse(rawJson);
+        var root = doc.RootElement;
+        var props = root.GetProperty("properties");
+
+        return new PageModel
+        {
+            Id = root.GetProperty("id").GetString() ?? string.Empty,
+            Title = root.GetProperty("name").GetString() ?? string.Empty,
+            Slug = ExtractSlug(root),
+            ContentType = root.GetProperty("contentType").GetString() ?? string.Empty,
+
+            HeroHeading = GetStringOrNull(props, "heroHeading"),
+            HeroSubtext = GetStringOrNull(props, "heroSubtext"),
+            HeroImageUrl = ExtractFirstMediaUrl(props, "heroImage"),
+            CtaButtonText = GetStringOrNull(props, "ctaButtonText"),
+            CtaButtonLink = ExtractLinkUrl(props, "ctaButtonLink"),
+
+            MetaTitle = GetStringOrNull(props, "metaTitle"),
+            MetaDescription = GetStringOrNull(props, "metaDescription"),
+
+            BodyContent = ExtractRichText(props, "bodyContent"),
+            SidebarContent = ExtractRichText(props, "sidebarContent"),
+
+            IntroductionHeading = GetStringOrNull(props, "introductionHeading"),
+            IntroductionText = ExtractRichText(props, "introductionText"),
+            BrandColor = GetStringOrNull(props, "brandColor"),
+            FeaturedSections = MapNavigationCards(props, "featuredSections"),   // ← ADD this line
+
+            Culture = requestedCulture
+        };
+    }
+
+    // ↓↓↓ ADD this new method here, right after MapToPage ↓↓↓
+    public static List<NavigationCardModel> MapNavigationCards(JsonElement props, string propertyName)
+    {
+        var results = new List<NavigationCardModel>();
+
+        foreach (var itemProps in ExtractBlockListItemProperties(props, propertyName))
+        {
+            results.Add(new NavigationCardModel
+            {
+                Heading = GetStringOrNull(itemProps, "cardHeading") ?? string.Empty,
+                Description = GetStringOrNull(itemProps, "cardDescription"),
+                LinkUrl = ExtractLinkUrl(itemProps, "cardLink"),
+                ImageUrl = ExtractFirstMediaUrl(itemProps, "cardImage")
+            });
+        }
+
+        return results;
+    }
+
+    public static List<KeyStatModel> MapKeyStats(JsonElement props, string propertyName)
+    {
+        var results = new List<KeyStatModel>();
+
+        foreach (var itemProps in ExtractBlockListItemProperties(props, propertyName))
+        {
+            results.Add(new KeyStatModel
+            {
+                Value = GetStringOrNull(itemProps, "statValue") ?? string.Empty,
+                Label = GetStringOrNull(itemProps, "statLabel") ?? string.Empty,
+                IconUrl = ExtractFirstMediaUrl(itemProps, "statIcon")
+            });
+        }
+
+        return results;
+    }
+
+    public static InvestorOverviewModel MapToInvestorOverview(string rawJson)
+    {
+        using var doc = JsonDocument.Parse(rawJson);
+        var root = doc.RootElement;
+        var props = root.GetProperty("properties");
+
+        return new InvestorOverviewModel
+        {
+            Introduction = ExtractRichText(props, "introduction"),
+            KeyStats = MapKeyStats(props, "keyStats"),
+            AnnualReportUrl = ExtractFirstMediaUrl(props, "annualReportPdf"),
+            PresentationUrl = ExtractFirstMediaUrl(props, "resultPresentationPdf"), // note: no "s"
+            Year = GetIntOrNull(props, "year") ?? 0
+        };
+    }
+
+    public static ServiceModel MapToService(string rawJson)
+    {
+        using var doc = JsonDocument.Parse(rawJson);
+        return MapServiceElement(doc.RootElement);
+    }
+
+    public static List<ServiceModel> MapToServiceList(string rawJson, string? brandSlug = null)
+    {
+        using var doc = JsonDocument.Parse(rawJson);
+        var root = doc.RootElement;
+        var results = new List<ServiceModel>();
+
+        if (!root.TryGetProperty("items", out var items) || items.ValueKind != JsonValueKind.Array)
+            return results;
+
+        foreach (var item in items.EnumerateArray())
+        {
+            if (brandSlug != null && !BelongsToBrand(item, brandSlug))
+                continue;
+
+            results.Add(MapServiceElement(item));
+        }
+
+        return results;
+    }
+
+    private static bool BelongsToBrand(JsonElement element, string brandSlug)
+    {
+        if (!element.TryGetProperty("route", out var route)) return false;
+        if (!route.TryGetProperty("startItem", out var startItem)) return false;
+        if (!startItem.TryGetProperty("path", out var path)) return false;
+        return string.Equals(path.GetString(), brandSlug, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static ServiceModel MapServiceElement(JsonElement element)
+    {
+        var props = element.GetProperty("properties");
+
+        return new ServiceModel
+        {
+            Id = element.GetProperty("id").GetString() ?? string.Empty,
+            Title = element.GetProperty("name").GetString() ?? string.Empty,
+            Slug = ExtractSlug(element),
+            Description = ExtractRichText(props, "serviceDescription"),
+            IconUrl = ExtractFirstMediaUrl(props, "serviceIcon"),
+            IsFeatured = GetBoolOrDefault(props, "isFeaturedService"),
+            Features = MapFeatures(props, "keyFeatured")
+        };
+    }
+
+    public static List<FeatureModel> MapFeatures(JsonElement props, string propertyName)
+    {
+        var results = new List<FeatureModel>();
+
+        foreach (var itemProps in ExtractBlockListItemProperties(props, propertyName))
+        {
+            results.Add(new FeatureModel
+            {
+                Title = GetStringOrNull(itemProps, "featureTitle") ?? string.Empty,
+                Description = GetStringOrNull(itemProps, "featureDescription"),
+                IconUrl = ExtractFirstMediaUrl(itemProps, "featureIcon"),
+                IsHighlighted = GetBoolOrDefault(itemProps, "isHighlighted")
+            });
+        }
+
+        return results;
+    }
+
+        public static ContactModel MapToContact(string rawJson)
+    {
+        using var doc = JsonDocument.Parse(rawJson);
+        var root = doc.RootElement;
+        var props = root.GetProperty("properties");
+
+        return new ContactModel
+        {
+            Address = GetStringOrNull(props, "address"),
+            Phone = GetStringOrNull(props, "phoneNumBer"),
+            Email = GetStringOrNull(props, "emailAddress"),
+            MapEmbed = GetStringOrNull(props, "googleMapEmbed"),
+            OfficeImageUrl = ExtractFirstMediaUrl(props, "officeImage")
+        };
+    }
+
+    // --- Shared helpers, reused by every mapper ---
+
+    private static string? GetStringOrNull(JsonElement props, string propertyName)
+    {
+        if (!props.TryGetProperty(propertyName, out var value)) return null;
+        return value.ValueKind == JsonValueKind.String ? value.GetString() : null;
+    }
+
+    private static int? GetIntOrNull(JsonElement props, string propertyName)
+    {
+        if (!props.TryGetProperty(propertyName, out var value)) return null;
+        return value.ValueKind == JsonValueKind.Number ? value.GetInt32() : null;
+    }
+    private static bool GetBoolOrDefault(JsonElement props, string propertyName)
+    {
+        if (!props.TryGetProperty(propertyName, out var value)) return false;
+        return value.ValueKind == JsonValueKind.True;
+    }
+
+    private static string? ExtractFirstMediaUrl(JsonElement props, string propertyName)
+    {
+        if (!props.TryGetProperty(propertyName, out var media)) return null;
+        if (media.ValueKind != JsonValueKind.Array || media.GetArrayLength() == 0) return null;
+        return media[0].TryGetProperty("url", out var url) ? url.GetString() : null;
+    }
+
+    private static string? ExtractRichText(JsonElement props, string propertyName)
+    {
+        if (!props.TryGetProperty(propertyName, out var rte)) return null;
+        return rte.ValueKind == JsonValueKind.Object && rte.TryGetProperty("markup", out var markup)
+            ? markup.GetString()
+            : null;
+    }
+
+    private static string? ExtractLinkUrl(JsonElement props, string propertyName)
+    {
+        if (!props.TryGetProperty(propertyName, out var link)) return null;
+        return link.ValueKind == JsonValueKind.Object && link.TryGetProperty("url", out var url)
+            ? url.GetString()
+            : null;
+    }
+
+    private static string ExtractSlug(JsonElement root)
+    {
+        if (!root.TryGetProperty("route", out var route))
+            return string.Empty;
+
+        // Get the full path e.g. "/" or "/cardiac-monitoring"
+        var fullPath = route.TryGetProperty("path", out var pathProp)
+            ? pathProp.GetString() ?? string.Empty
+            : string.Empty;
+
+        var trimmed = fullPath.Trim('/');
+
+        // Root node — path is "/" so trimmed is empty
+        // Fall back to startItem.path which has the brand slug
+        if (string.IsNullOrEmpty(trimmed))
+        {
+            if (route.TryGetProperty("startItem", out var startItem) &&
+                startItem.TryGetProperty("path", out var startPath))
+            {
+                return startPath.GetString() ?? string.Empty;
+            }
+            return string.Empty;
+        }
+
+        // Child page — take the last segment of the path
+        var segments = trimmed.Split('/');
+        return segments[^1];
+    }
+
+    private static IEnumerable<JsonElement> ExtractBlockListItemProperties(JsonElement props, string propertyName)
+    {
+        if (!props.TryGetProperty(propertyName, out var blockList)) yield break;
+        if (blockList.ValueKind != JsonValueKind.Object) yield break;
+        if (!blockList.TryGetProperty("items", out var items)) yield break;
+        if (items.ValueKind != JsonValueKind.Array) yield break;
+
+        foreach (var item in items.EnumerateArray())
+        {
+            if (item.TryGetProperty("content", out var content) &&
+                content.TryGetProperty("properties", out var itemProps))
+            {
+                yield return itemProps;
+            }
+        }
+    }
+}

@@ -1,0 +1,54 @@
+﻿@using ContentModels = Umbraco.Cms.Web.Common.PublishedModels
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage<ContentModels.ServicePage>
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+<head><title>@Model.Name</title></head>
+<body style="font-family: sans-serif; margin: 0;">
+	@{
+		var rootName = Model.Root()?.Name ?? "";
+	}
+	<nav style="background:#111; padding: 16px 32px; display:flex; gap: 24px;">
+		<a href="/" style="color:white; text-decoration:none;">Home</a>
+
+		@if (rootName == "Uniphar Group")
+		{
+			<a href="/about-us/" style="color:white; text-decoration:none;">About</a>
+			<a href="/investors/" style="color:white; text-decoration:none;">Investors</a>
+			<a href="/sustainability/" style="color:white; text-decoration:none;">Sustainability</a>
+		}
+		else if (rootName == "Uniphar Medtech")
+		{
+			<a href="/services/" style="color:white; text-decoration:none;">Services</a>
+		}
+		else if (rootName == "Uniphar Pharma")
+		{
+			<a href="/products/" style="color:white; text-decoration:none;">Products</a>
+		}
+
+		<a href="/contact/" style="color:white; text-decoration:none;">Contact</a>
+	</nav>
+    <header style="background:#0066cc; color:white; padding: 60px 32px;">
+        <h1>@Model.Name</h1>
+    </header>
+    <section style="padding: 40px 32px;">
+        <div>@Html.Raw(Model.ServiceDescription)</div>
+    </section>
+
+    @if (Model.KeyFeatures != null && Model.KeyFeatures.Any())
+    {
+        <section style="padding: 0 32px 40px; display: flex; gap: 24px; flex-wrap: wrap;">
+            @foreach (var block in Model.KeyFeatures)
+            {
+                var feature = block.Content;
+                <div style="border:1px solid #ddd; border-radius:8px; padding:20px; max-width:260px;">
+                    <h3>@feature.Value("featureTitle")</h3>
+                    <p>@feature.Value("featureDescription")</p>
+                </div>
+            }
+        </section>
+    }
+</body>
+</html>

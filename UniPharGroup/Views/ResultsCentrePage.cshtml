@@ -1,0 +1,54 @@
+﻿@using ContentModels = Umbraco.Cms.Web.Common.PublishedModels
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage<ContentModels.ResultsCentrePage>
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+<head><title>@Model.Name</title></head>
+<body style="font-family: sans-serif; margin: 0;">
+	@{
+		var rootName = Model.Root()?.Name ?? "";
+	}
+	<nav style="background:#111; padding: 16px 32px; display:flex; gap: 24px;">
+		<a href="/" style="color:white; text-decoration:none;">Home</a>
+
+		@if (rootName == "Uniphar Group")
+		{
+			<a href="/about-us/" style="color:white; text-decoration:none;">About</a>
+			<a href="/investors/" style="color:white; text-decoration:none;">Investors</a>
+			<a href="/sustainability/" style="color:white; text-decoration:none;">Sustainability</a>
+		}
+		else if (rootName == "Uniphar Medtech")
+		{
+			<a href="/services/" style="color:white; text-decoration:none;">Services</a>
+		}
+		else if (rootName == "Uniphar Pharma")
+		{
+			<a href="/products/" style="color:white; text-decoration:none;">Products</a>
+		}
+
+		<a href="/contact/" style="color:white; text-decoration:none;">Contact</a>
+	</nav>
+    <header style="background:#1b264f; color:white; padding: 60px 32px;">
+        <h1>@Model.Name</h1>
+        <p>Results Year: @Model.ResultsYear</p>
+    </header>
+    <section style="padding: 40px 32px;">
+        <div>@Html.Raw(Model.ResultSummary)</div>
+    </section>
+
+    @if (Model.Documents != null && Model.Documents.Any())
+    {
+        <section style="padding: 0 32px 40px;">
+            @foreach (var block in Model.Documents)
+            {
+                var doc = block.Content;
+                <div style="border:1px solid #ddd; padding:16px; margin-bottom:12px; border-radius:8px;">
+                    <strong>@doc.Value("documentTitle")</strong> — @doc.Value("documentTypeLabel") (@doc.Value("documentYear"))
+                </div>
+            }
+        </section>
+    }
+</body>
+</html>
