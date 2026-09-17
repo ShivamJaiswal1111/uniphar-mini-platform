@@ -5,5 +5,6 @@ export interface InvestorOverview {
   keyStats: KeyStat[];
   annualReportUrl: string;
   presentationUrl: string;
+  stockTickerEmbed: string;
   year: number;
 }

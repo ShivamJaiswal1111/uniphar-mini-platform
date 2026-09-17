@@ -11,6 +11,6 @@ export class ApiService {
 
   get<T>(endpoint: string, culture: string = 'en-US'): Observable<T> {
     const headers = new HttpHeaders({ 'Accept-Language': culture });
-    return this.http.get<T>(`${this.baseUrl}/${endpoint}`, { headers });
+    return this.http.get<T>(`${this.baseUrl}/${endpoint}?culture=${culture}`, { headers });
   }
 }
