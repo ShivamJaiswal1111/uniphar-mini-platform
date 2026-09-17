@@ -7,4 +7,5 @@ public class InvestorOverviewModel
     public string? AnnualReportUrl { get; set; }
     public string? PresentationUrl { get; set; }
     public int Year { get; set; }
+    public string? StockTickerEmbed { get; set; }
 }
