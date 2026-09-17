@@ -34,9 +34,41 @@
         <h1>Contact</h1>
     </header>
     <section style="padding: 40px 32px;">
-        <p>@Model.Address</p>
-        <p>Phone: @Model.Value("phoneNumBer")</p>
-        <p>Email: @Model.EmailAddress</p>
-    </section>
+		<p>@Model.Address</p>
+		<p>Phone: @Model.Value("phoneNumBer")</p>
+		<p>Email: @Model.EmailAddress</p>
+
+		@{
+			var mapEmbed = Model.Value<string>("googleMapEmbed");
+			var officeImage = Model.Value<Umbraco.Cms.Core.Models.PublishedContent.IPublishedContent>("officeImage");
+		}
+
+		<h2 style="font-size: 22px; font-weight: 600; color: #1b264f; margin-top: 48px; margin-bottom: 16px;">Our Office</h2>
+
+		<style>
+			.map-embed-wrap iframe {
+				width: 100% !important;
+				height: 100% !important;
+				border: 0;
+				display: block;
+			}
+		</style>
+
+		<div style="display: flex; gap: 24px; flex-wrap: wrap;">
+			@if (officeImage != null)
+			{
+				<div style="flex: 1; min-width: 300px;">
+					<img src="@officeImage.Url()" alt="Office"
+						style="width: 100%; height: 320px; object-fit: cover; border-radius: 8px; display: block;" />
+				</div>
+			}
+			@if (!string.IsNullOrWhiteSpace(mapEmbed))
+			{
+				<div class="map-embed-wrap" style="flex: 1; min-width: 300px; height: 320px; border-radius: 8px; overflow: hidden;">
+					@Html.Raw(mapEmbed)
+				</div>
+			}
+		</div>
+	</section>
 </body>
 </html>
