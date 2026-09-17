@@ -7,6 +7,7 @@ import { LanguageService } from '../../services/language.service';
 import { NavbarComponent } from '../../components/navbar/navbar.component';
 import { HeroComponent } from '../../components/hero/hero.component';
 import { FooterComponent } from '../../components/footer/footer.component';
+import { MapComponent } from '../../components/map/map';
 
 interface ContactData {
   address: string;
@@ -14,12 +15,14 @@ interface ContactData {
   email: string;
   mapEmbed: string;
   officeImageUrl: string;
+  latitude: number | null;
+  longitude: number | null;
 }
 
 @Component({
   selector: 'app-contact',
   standalone: true,
-  imports: [CommonModule, NavbarComponent, HeroComponent, FooterComponent],
+  imports: [CommonModule, NavbarComponent, HeroComponent, FooterComponent, MapComponent],
   templateUrl: './contact.component.html'
 })
 export class ContactComponent implements OnInit, OnDestroy {
@@ -52,7 +55,7 @@ export class ContactComponent implements OnInit, OnDestroy {
   loadContact(culture: string): void {
     this.loading = true;
     this.error = null;
-    this.api.get<ContactData>(`${this.brandSlug}/page/contact`, culture).subscribe({
+    this.api.get<ContactData>(`${this.brandSlug}/contact`, culture).subscribe({
       next: data => {
         this.contact = data;
         this.loading = false;
