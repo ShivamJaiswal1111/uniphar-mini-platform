@@ -1,2 +1,28 @@
-my-ecommerce-app/
-my-first-fabric-app/
+
+
+# .NET build outputs
+bin/
+obj/
+*.user
+
+# Visual Studio
+.vs/
+
+# Umbraco runtime/data
+UniPharGroup/umbraco/Data/
+UniPharGroup/App_Data/
+UniPharGroup/App_Plugins/*/package.manifest.bak
+
+# Angular / Node
+uniphar-frontend/node_modules/
+uniphar-frontend/dist/
+uniphar-frontend/.angular/
+
+# Environment/secrets (add if you ever create these)
+**/appsettings.Development.json
+**/appsettings.Local.json
+**/.env
+
+# OS junk
+.DS_Store
+Thumbs.db
