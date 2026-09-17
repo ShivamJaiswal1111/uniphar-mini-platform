@@ -3,21 +3,25 @@ import { RouterLink, Router, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { filter } from 'rxjs';
 import { LanguageService } from '../../services/language.service';
+import { FormsModule } from '@angular/forms';
+
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [RouterLink, CommonModule],
+  imports: [RouterLink, CommonModule, FormsModule],
   templateUrl: './navbar.component.html'
 })
 export class NavbarComponent implements OnInit {
   currentLanguage: string = 'en-US';
   activeBrand: string = 'uniphar-group';
+  showMedtech = false;
+  showPharma = false;
 
   languages = [
     { code: 'en-US', label: 'English' },
-    { code: 'fr', label: 'French' },
-    { code: 'de', label: 'German' }
+    { code: 'fr-FR', label: 'French' },
+    { code: 'de-DE', label: 'German' }
   ];
 
   constructor(

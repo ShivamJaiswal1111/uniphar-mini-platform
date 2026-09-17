@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+// import { ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { Subject, combineLatest, takeUntil } from 'rxjs';
 import { PageService } from '../../services/page.service';
@@ -8,11 +8,12 @@ import { NavbarComponent } from '../../components/navbar/navbar.component';
 import { HeroComponent } from '../../components/hero/hero.component';
 import { FooterComponent } from '../../components/footer/footer.component';
 import { Page } from '../../models/page.model';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, NavbarComponent, HeroComponent, FooterComponent],
+  imports: [CommonModule, RouterLink, NavbarComponent, HeroComponent, FooterComponent],
   templateUrl: './home.component.html'
 })
 export class HomeComponent implements OnInit, OnDestroy {
@@ -61,6 +62,20 @@ export class HomeComponent implements OnInit, OnDestroy {
       }
     });
   }
+
+  getCardLink(linkUrl: string | null): string {
+    if (!linkUrl) return '/';
+    
+    // If it's already an absolute path starting with /, use it as-is
+    if (linkUrl.startsWith(`/${this.brandSlug}`)) return linkUrl;
+    
+    // For uniphar-group, links are already absolute
+    if (this.brandSlug === 'uniphar-group') return linkUrl;
+    
+    // For other brands, prepend the brand slug
+    return `/${this.brandSlug}${linkUrl}`;
+  }
+
 
   ngOnDestroy(): void {
     this.destroy$.next();

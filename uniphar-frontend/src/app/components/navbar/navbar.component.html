@@ -4,6 +4,7 @@
 
     <a routerLink="/" style="color: white; text-decoration: none; font-size: 14px; opacity: 0.85;">Group</a>
     <a routerLink="/investors" style="color: white; text-decoration: none; font-size: 14px; opacity: 0.85;">Investors</a>
+    <a routerLink="/sustainability" style="color: white; text-decoration: none; font-size: 14px; opacity: 0.85;">Sustainability</a>
 
     <!-- Medtech dropdown -->
     <div style="position: relative;" (mouseenter)="showMedtech=true" (mouseleave)="showMedtech=false">
@@ -27,7 +28,7 @@
       <div *ngIf="showPharma" style="position: absolute; top: 100%; left: 0; padding-top: 8px; z-index: 100;">
         <div style="background: white; border-radius: 6px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); min-width: 160px; padding: 8px 0;">
         <a routerLink="/uniphar-pharma" style="display: block; padding: 10px 16px; color: #1b264f; text-decoration: none; font-size: 14px;">Home</a>
-        <a routerLink="/uniphar-pharma/services" style="display: block; padding: 10px 16px; color: #1b264f; text-decoration: none; font-size: 14px;">Services</a>
+        <a routerLink="/uniphar-pharma/services" style="display: block; padding: 10px 16px; color: #1b264f; text-decoration: none; font-size: 14px;">Products</a>
         <a routerLink="/uniphar-pharma/contact" style="display: block; padding: 10px 16px; color: #1b264f; text-decoration: none; font-size: 14px;">Contact</a>
         </div>
       </div>
@@ -35,7 +36,7 @@
 
     <a routerLink="/contact" style="color: white; text-decoration: none; font-size: 14px; opacity: 0.85;">Contact</a>
 
-    <select [value]="currentLanguage" (change)="switchLanguage($event)" style="padding: 6px 10px; border-radius: 4px; border: none; font-size: 13px; cursor: pointer;">
+    <select [ngModel]="currentLanguage" (change)="switchLanguage($event)" style="padding: 6px 10px; border-radius: 4px; border: none; font-size: 13px; cursor: pointer;">
       <option *ngFor="let lang of languages" [value]="lang.code">{{ lang.label }}</option>
     </select>
 
