@@ -20,7 +20,7 @@ public class UmbracoService
 
         var request = new HttpRequestMessage(HttpMethod.Get,
             $"/umbraco/delivery/api/v2/content/item{domainRelativePath}");
-        request.Headers.Host = ResolveHostname(brandSlug);
+        request.Headers.Host = ResolveHostname(brandSlug, culture);
         request.Headers.Add("Accept-Language", culture);
 
         var response = await client.SendAsync(request);
@@ -43,12 +43,21 @@ public class UmbracoService
         return await response.Content.ReadAsStringAsync();
     }
 
-    private static string ResolveHostname(string brandSlug) => brandSlug switch
+    private static string ResolveHostname(string brandSlug, string culture = "en-US") => (brandSlug, culture) switch
     {
-        "uniphar-group" => "uniphargroup.localhost:44335",
-        "uniphar-medtech" => "unimedtech.localhost:44335",
-        "uniphar-pharma" => "unipharma.localhost:44335",
+        ("uniphar-medtech", "fr-FR") => "unimedtech.localhost:44335",
+        ("uniphar-pharma", "de-DE") => "unipharma.localhost:44335",
+        ("uniphar-group", _) => "uniphargroup.localhost:44335",
+        ("uniphar-medtech", _) => "unimedtech.localhost:44335",
+        ("uniphar-pharma", _) => "unipharma.localhost:44335",
         _ => "uniphargroup.localhost:44335"
+    };
+
+    private static string ResolveCulturePath(string culture) => culture switch
+    {
+        "fr-FR" => "/fr",
+        "de-DE" => "/de",
+        _ => ""
     };
 
     // Fetches a media file from Umbraco and returns it as a stream

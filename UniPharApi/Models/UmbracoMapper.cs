@@ -129,7 +129,8 @@ public static class UmbracoMapper
             Introduction = ExtractRichText(props, "introduction"),
             KeyStats = MapKeyStats(props, "keyStats"),
             AnnualReportUrl = ExtractFirstMediaUrl(props, "annualReportPdf"),
-            PresentationUrl = ExtractFirstMediaUrl(props, "resultPresentationPdf"), // note: no "s"
+            PresentationUrl = ExtractFirstMediaUrl(props, "resultPresentationPdf"), 
+            StockTickerEmbed = GetStringOrNull(props, "stockTickerEmbed"),
             Year = GetIntOrNull(props, "year") ?? 0
         };
     }
@@ -177,6 +178,9 @@ public static class UmbracoMapper
             Id = element.GetProperty("id").GetString() ?? string.Empty,
             Title = element.GetProperty("name").GetString() ?? string.Empty,
             Slug = ExtractSlug(element),
+            HeroHeading = GetStringOrNull(props, "heroHeading"),
+            HeroSubtext = GetStringOrNull(props, "heroSubtext"),
+            HeroImageUrl = ExtractFirstMediaUrl(props, "heroImage"),
             Description = ExtractRichText(props, "serviceDescription"),
             IconUrl = ExtractFirstMediaUrl(props, "serviceIcon"),
             IsFeatured = GetBoolOrDefault(props, "isFeaturedService"),
@@ -202,7 +206,7 @@ public static class UmbracoMapper
         return results;
     }
 
-        public static ContactModel MapToContact(string rawJson)
+    public static ContactModel MapToContact(string rawJson)
     {
         using var doc = JsonDocument.Parse(rawJson);
         var root = doc.RootElement;
@@ -214,8 +218,37 @@ public static class UmbracoMapper
             Phone = GetStringOrNull(props, "phoneNumBer"),
             Email = GetStringOrNull(props, "emailAddress"),
             MapEmbed = GetStringOrNull(props, "googleMapEmbed"),
-            OfficeImageUrl = ExtractFirstMediaUrl(props, "officeImage")
+            OfficeImageUrl = ExtractFirstMediaUrl(props, "officeImage"),
+            Latitude = GetDoubleOrNull(props, "latitude"),
+            Longitude = GetDoubleOrNull(props, "longitude")
         };
+    }
+    public static SustainabilityModel MapToSustainability(string rawJson)
+    {
+        using var doc = JsonDocument.Parse(rawJson);
+        var root = doc.RootElement;
+        var props = root.GetProperty("properties");
+
+        var model = new SustainabilityModel
+        {
+            HeroHeading = GetStringOrNull(props, "heroHeading") ?? string.Empty,
+            HeroSubtext = GetStringOrNull(props, "heroSubtext") ?? string.Empty,
+            OverviewText = ExtractRichText(props, "overviewText") ?? string.Empty,
+            EsgReportUrl = ExtractFirstMediaUrl(props, "esgReportPdf")
+        };
+
+        foreach (var itemProps in ExtractBlockListItemProperties(props, "sustainabilityGoals"))
+        {
+            model.Goals.Add(new GoalModel
+            {
+                Title = GetStringOrNull(itemProps, "goalTitle") ?? string.Empty,
+                Description = GetStringOrNull(itemProps, "goalDescription") ?? string.Empty,
+                Target = GetStringOrNull(itemProps, "goalTarget") ?? string.Empty,
+                Progress = GetIntOrNull(itemProps, "goalProgress") ?? 0
+            });
+        }
+
+        return model;
     }
 
     // --- Shared helpers, reused by every mapper ---
@@ -225,6 +258,25 @@ public static class UmbracoMapper
         if (!props.TryGetProperty(propertyName, out var value)) return null;
         return value.ValueKind == JsonValueKind.String ? value.GetString() : null;
     }
+
+    private static double? GetDoubleOrNull(JsonElement props, string propertyName)
+    {
+        if (!props.TryGetProperty(propertyName, out var value))
+            return null;
+
+        if (value.ValueKind == JsonValueKind.Null || value.ValueKind == JsonValueKind.Undefined)
+            return null;
+
+        if (value.ValueKind == JsonValueKind.Number)
+            return value.GetDouble();
+
+        // fallback in case it ever comes through as a string
+        if (value.ValueKind == JsonValueKind.String && double.TryParse(value.GetString(), out var parsed))
+            return parsed;
+
+        return null;
+    }
+
 
     private static int? GetIntOrNull(JsonElement props, string propertyName)
     {
@@ -241,7 +293,19 @@ public static class UmbracoMapper
     {
         if (!props.TryGetProperty(propertyName, out var media)) return null;
         if (media.ValueKind != JsonValueKind.Array || media.GetArrayLength() == 0) return null;
-        return media[0].TryGetProperty("url", out var url) ? url.GetString() : null;
+        var relativeUrl = media[0].TryGetProperty("url", out var url) ? url.GetString() : null;
+        if (string.IsNullOrEmpty(relativeUrl)) return null;
+
+        // Umbraco returns something like "/media/l0vgpwcx/download.jpg"
+        // Strip the leading "/media/" since MediaController re-adds it
+        var trimmed = relativeUrl.TrimStart('/');
+        if (trimmed.StartsWith("media/", StringComparison.OrdinalIgnoreCase))
+        {
+            trimmed = trimmed["media/".Length..];
+        }
+
+        // Absolute URL pointing at our own .NET API — matches Angular's environment.apiBaseUrl
+        return $"http://localhost:5220/api/media/{trimmed}";
     }
 
     private static string? ExtractRichText(JsonElement props, string propertyName)
@@ -255,11 +319,26 @@ public static class UmbracoMapper
     private static string? ExtractLinkUrl(JsonElement props, string propertyName)
     {
         if (!props.TryGetProperty(propertyName, out var link)) return null;
-        return link.ValueKind == JsonValueKind.Object && link.TryGetProperty("url", out var url)
-            ? url.GetString()
-            : null;
-    }
+        if (link.ValueKind != JsonValueKind.Array || link.GetArrayLength() == 0) return null;
 
+        var first = link[0];
+
+        // External links have a populated "url" field directly
+        if (first.TryGetProperty("url", out var url) && url.ValueKind == JsonValueKind.String)
+        {
+            return url.GetString();
+        }
+
+        // Internal content links have url: null, but a nested route.path
+        if (first.TryGetProperty("route", out var route) &&
+            route.TryGetProperty("path", out var routePath) &&
+            routePath.ValueKind == JsonValueKind.String)
+        {
+            return routePath.GetString();
+        }
+
+        return null;
+    }
     private static string ExtractSlug(JsonElement root)
     {
         if (!root.TryGetProperty("route", out var route))
