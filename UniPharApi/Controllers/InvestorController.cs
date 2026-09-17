@@ -31,12 +31,19 @@ public class InvestorController : ControllerBase
             return Ok(cached);
         }
 
-        var rawJson = await _umbracoService.GetContentByPath("/investors", "uniphar-group", culture);
-        var overview = UmbracoMapper.MapToInvestorOverview(rawJson);
-
-        _cache.Set(cacheKey, overview, TimeSpan.FromMinutes(10));
-        _logger.LogInformation("Cache set: {Key}", cacheKey);
-
-        return Ok(overview);
+        try
+        {
+            var rawJson = await _umbracoService.GetContentByPath("/investors/", "uniphar-group", culture);
+            var overview = UmbracoMapper.MapToInvestorOverview(rawJson);
+            _cache.Set(cacheKey, overview, TimeSpan.FromMinutes(10));
+            _logger.LogInformation("Cache set: {Key}", cacheKey);
+            return Ok(overview);
+        }
+        catch (HttpRequestException ex) when (ex.Message.Contains("404"))
+        {
+            var rawJson = await _umbracoService.GetContentByPath("/investors/", "uniphar-group", "en-US");
+            var overview = UmbracoMapper.MapToInvestorOverview(rawJson);
+            return Ok(overview);
+        }
     }
 }
