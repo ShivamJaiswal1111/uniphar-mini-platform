@@ -1,3 +1,5 @@
+import { BreadcrumbItem } from "./page.model";
+
 export interface Brand {
   id: string;
   name: string;
@@ -5,4 +7,5 @@ export interface Brand {
   logoUrl: string;
   primaryColor: string;
   culture: string;
+  breadcrumbs: BreadcrumbItem[];
 }

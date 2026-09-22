@@ -1,3 +1,8 @@
+export interface BreadcrumbItem {
+  title: string;
+  url: string | null;
+}
+
 export interface NavigationCard {
   heading: string;
   description: string;
@@ -9,6 +14,9 @@ export interface Page {
   id: string;
   title: string;
   slug: string;
+  
+  brandSlug: string | null;
+  contentType: string | null;
   heroHeading: string;
   heroSubtext: string;
   heroImageUrl: string;
@@ -23,4 +31,5 @@ export interface Page {
   brandColor: string | null;
   featuredSections: NavigationCard[];
   culture: string;
+  breadcrumbs: BreadcrumbItem[];
 }

@@ -1,3 +1,5 @@
+import { BreadcrumbItem } from "./page.model";
+
 export interface Service {
   id: string;
   title: string;
@@ -9,6 +11,7 @@ export interface Service {
   iconUrl: string | null;
   isFeatured: boolean;
   features: Feature[];
+  breadcrumbs: BreadcrumbItem[];
 }
 
 export interface Feature {
