@@ -1,0 +1,46 @@
+<app-navbar></app-navbar>
+
+<section style="background: #1b264f; padding: 60px 32px;">
+  <div style="max-width: 1200px; margin: 0 auto;">
+    <h1 style="color: white; font-size: 32px; font-weight: 600; margin: 0 0 12px;">
+      Search Results
+    </h1>
+    <p style="color: rgba(255,255,255,0.75); font-size: 16px; margin: 0;">
+      Showing results for "{{ query }}"
+    </p>
+  </div>
+</section>
+
+<div *ngIf="loading" style="padding: 60px 32px; text-align: center; color: #666;">
+  Searching...
+</div>
+
+<div *ngIf="error" style="padding: 60px 32px; text-align: center; color: #c00;">
+  {{ error }}
+</div>
+
+<section *ngIf="!loading && !error" style="padding: 60px 32px; background: #f5f5f5;">
+  <div style="max-width: 1200px; margin: 0 auto;">
+
+    <p *ngIf="results.length === 0" style="color: #666; text-align: center;">
+      No results found for "{{ query }}".
+    </p>
+
+    <div *ngIf="results.length > 0" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px;">
+      <a *ngFor="let result of results"
+        [routerLink]="getResultRoute(result).commands"
+        [queryParams]="getResultRoute(result).queryParams"
+        style="background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); text-decoration: none; display: block;">
+        <h3 style="color: #1b264f; font-size: 16px; font-weight: 600; margin: 0 0 8px;">
+            {{ result.title }}
+        </h3>
+        <p style="color: #888; font-size: 13px; margin: 0;">
+            {{ result.metaTitle }}
+        </p>
+      </a>
+    </div>
+
+  </div>
+</section>
+
+<app-footer></app-footer>

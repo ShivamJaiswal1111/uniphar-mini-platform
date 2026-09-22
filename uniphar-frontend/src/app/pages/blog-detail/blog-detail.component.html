@@ -1,0 +1,37 @@
+<app-navbar></app-navbar>
+
+<!-- Error state -->
+<div *ngIf="error" style="padding: 60px 32px; text-align: center; color: #c00;">{{ error }}</div>
+
+<!-- Hero — always rendered -->
+<app-hero
+  [loading]="loading"
+  [heading]="post?.heroHeading || post?.title || ''"
+  [subtext]="post?.heroSubtext || ''"
+  [imageUrl]="post?.heroImageUrl || ''">
+</app-hero>
+
+<!-- Content — only when data is ready -->
+<div *ngIf="!loading && !error && post" class="page-fade">
+  <app-breadcrumb [crumbs]="post?.breadcrumbs || []" />
+  <section style="padding: 60px 32px; max-width: 900px; margin: 0 auto;">
+
+    <a routerLink="/blog"
+      style="display: inline-block; color: #1b264f; text-decoration: none; font-size: 14px; margin-bottom: 32px; opacity: 0.7;">
+      ← Back to Blog
+    </a>
+
+    <div *ngIf="post.sidebarContent"
+      [innerHTML]="post.sidebarContent"
+      style="background: #f5f5f5; border-left: 4px solid #1b264f; padding: 16px 20px; border-radius: 4px; margin-bottom: 32px; font-size: 14px; color: #555;">
+    </div>
+
+    <div *ngIf="post.bodyContent"
+      [innerHTML]="post.bodyContent"
+      style="font-size: 16px; line-height: 1.8; color: #333;">
+    </div>
+
+  </section>
+</div>
+
+<app-footer></app-footer>

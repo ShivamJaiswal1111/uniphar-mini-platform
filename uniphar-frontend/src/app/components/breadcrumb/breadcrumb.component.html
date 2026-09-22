@@ -1,0 +1,13 @@
+<nav *ngIf="crumbs.length > 0" style="padding: 12px 32px; background: #f0f2f5; font-size: 14px; color: #555;">
+  <ng-container *ngFor="let crumb of crumbs; let last = last">
+    <a *ngIf="crumb.url && !last"
+       [routerLink]="crumb.url"
+       style="color: #0066cc; text-decoration: none;">
+      {{ crumb.title }}
+    </a>
+    <span *ngIf="!crumb.url || last" style="color: #333;">
+      {{ crumb.title }}
+    </span>
+    <span *ngIf="!last" style="margin: 0 8px; color: #aaa;">/</span>
+  </ng-container>
+</nav>
