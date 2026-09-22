@@ -1,3 +1,82 @@
-<footer style="background: #1b264f; color: white; padding: 32px; text-align: center; margin-top: 60px;">
-  <p style="margin: 0; opacity: 0.7;">© 2026 Uniphar Group. All rights reserved.</p>
+<footer style="background: #1b264f; color: white; margin-top: 60px;">
+
+  <!-- Main footer grid -->
+  <div style="max-width: 1200px; margin: 0 auto; padding: 60px 32px; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 48px;">
+
+    <!-- Brand column -->
+    <div>
+      <div style="font-size: 22px; font-weight: 700; margin-bottom: 16px; letter-spacing: -0.5px;">Uniphar</div>
+      <p style="color: rgba(255,255,255,0.6); font-size: 14px; line-height: 1.7; margin: 0 0 20px;">
+        An international diversified healthcare services business. Trusted global partners to pharma and medtech manufacturers.
+      </p>
+      <p style="color: rgba(255,255,255,0.5); font-size: 13px; margin: 0 0 6px;">
+        📍 Grand Canal Square, Dublin 2, Ireland
+      </p>
+      <p style="color: rgba(255,255,255,0.5); font-size: 13px; margin: 0 0 6px;">
+        📞 +353 (0) 1 428 7777
+      </p>
+      <p style="color: rgba(255,255,255,0.5); font-size: 13px; margin: 0;">
+        🌐 www.uniphar.ie
+      </p>
+    </div>
+
+    <!-- Company links -->
+    <div>
+      <h4 style="font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.5); margin: 0 0 20px;">Company</h4>
+      <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px;">
+        <li><a routerLink="/about-us" style="color: rgba(255,255,255,0.75); text-decoration: none; font-size: 14px;">About Us</a></li>
+        <li><a routerLink="/sustainability" style="color: rgba(255,255,255,0.75); text-decoration: none; font-size: 14px;">Sustainability</a></li>
+        <li><a routerLink="/investors" style="color: rgba(255,255,255,0.75); text-decoration: none; font-size: 14px;">Investor Relations</a></li>
+        <li><a routerLink="/blog" style="color: rgba(255,255,255,0.75); text-decoration: none; font-size: 14px;">Blog</a></li>
+        <li><a routerLink="/contact" style="color: rgba(255,255,255,0.75); text-decoration: none; font-size: 14px;">Contact</a></li>
+      </ul>
+    </div>
+
+    <!-- Divisions links -->
+    <div>
+      <h4 style="font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.5); margin: 0 0 20px;">Divisions</h4>
+      <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px;">
+        <li><a routerLink="/uniphar-group" style="color: rgba(255,255,255,0.75); text-decoration: none; font-size: 14px;">Uniphar Group</a></li>
+        <li><a routerLink="/uniphar-medtech" style="color: rgba(255,255,255,0.75); text-decoration: none; font-size: 14px;">Uniphar Medtech</a></li>
+        <li><a routerLink="/uniphar-pharma" style="color: rgba(255,255,255,0.75); text-decoration: none; font-size: 14px;">Uniphar Pharma</a></li>
+        <li><a routerLink="/uniphar-medtech/services" style="color: rgba(255,255,255,0.75); text-decoration: none; font-size: 14px;">Our Services</a></li>
+        <li><a routerLink="/uniphar-pharma/services" style="color: rgba(255,255,255,0.75); text-decoration: none; font-size: 14px;">Our Products</a></li>
+      </ul>
+    </div>
+
+    <!-- Investors links -->
+    <div>
+      <h4 style="font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.5); margin: 0 0 20px;">Investors</h4>
+      <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px;">
+        <li><a routerLink="/investors" style="color: rgba(255,255,255,0.75); text-decoration: none; font-size: 14px;">Overview</a></li>
+        <li><a routerLink="/investors" style="color: rgba(255,255,255,0.75); text-decoration: none; font-size: 14px;">Results Centre</a></li>
+        <li><a routerLink="/investors" style="color: rgba(255,255,255,0.75); text-decoration: none; font-size: 14px;">Annual Report</a></li>
+        <li><a routerLink="/investors" style="color: rgba(255,255,255,0.75); text-decoration: none; font-size: 14px;">Shareholder Centre</a></li>
+      </ul>
+
+      <!-- Stock info -->
+      <div style="margin-top: 28px; padding: 16px; background: rgba(255,255,255,0.07); border-radius: 6px;">
+        <div style="font-size: 11px; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Listed On</div>
+        <div style="font-size: 14px; font-weight: 600; color: white;">Euronext Dublin</div>
+        <div style="font-size: 13px; color: rgba(255,255,255,0.5); margin-top: 4px;">Ticker: UPR</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Divider -->
+  <div style="border-top: 1px solid rgba(255,255,255,0.1);"></div>
+
+  <!-- Bottom bar -->
+  <div style="max-width: 1200px; margin: 0 auto; padding: 24px 32px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+    <p style="margin: 0; color: rgba(255,255,255,0.4); font-size: 13px;">
+      © {{ currentYear }} Uniphar Group plc. All rights reserved. Registered in Ireland.
+    </p>
+    <div style="display: flex; gap: 24px;">
+      <a href="#" style="color: rgba(255,255,255,0.4); text-decoration: none; font-size: 13px;">Privacy Policy</a>
+      <a href="#" style="color: rgba(255,255,255,0.4); text-decoration: none; font-size: 13px;">Cookie Policy</a>
+      <a href="#" style="color: rgba(255,255,255,0.4); text-decoration: none; font-size: 13px;">Terms of Use</a>
+    </div>
+  </div>
+
 </footer>
