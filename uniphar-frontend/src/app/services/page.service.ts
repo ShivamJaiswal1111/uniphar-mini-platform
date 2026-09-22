@@ -14,4 +14,17 @@ export class PageService {
   getHome(brandSlug: string, culture: string = 'en-US'): Observable<Page> {
     return this.api.get<Page>(`${brandSlug}/home`, culture);
   }
+
+  getLegacyPage(slug: string): Observable<Page> {
+    return this.api.get<Page>(`legacy/${slug}`);
+  }
+  getBlogPosts(): Observable<Page[]> {
+    return this.api.get<Page[]>('blog');
+  }
+
+  getBlogPost(slug: string, source: string = 'new'): Observable<Page> {
+    return this.api.get<Page>(`blog/${slug}`, 'en-US', { source });
+  }
+
+  
 }

@@ -9,8 +9,15 @@ export class ApiService {
 
   constructor(private http: HttpClient) {}
 
-  get<T>(endpoint: string, culture: string = 'en-US'): Observable<T> {
+  get<T>(endpoint: string, culture: string = 'en-US', extraParams: Record<string, string> = {}): Observable<T> {
     const headers = new HttpHeaders({ 'Accept-Language': culture });
-    return this.http.get<T>(`${this.baseUrl}/${endpoint}?culture=${culture}`, { headers });
+    let params = `culture=${culture}`;
+    for (const [key, value] of Object.entries(extraParams)) {
+      params += `&${key}=${value}`;
+    }
+    return this.http.get<T>(`${this.baseUrl}/${endpoint}?${params}`, { headers });
+  }
+  post<T>(endpoint: string, body: any): Observable<T> {
+    return this.http.post<T>(`${this.baseUrl}/${endpoint}`, body);
   }
 }
