@@ -33,9 +33,19 @@
         </div>
       </div>
     </div>
-
+    
     <a routerLink="/contact" style="color: white; text-decoration: none; font-size: 14px; opacity: 0.85;">Contact</a>
 
+    <form (ngSubmit)="runSearch()" style="display: flex; align-items: center;">
+      <input
+        type="text"
+        [(ngModel)]="searchQuery"
+        name="searchQuery"
+        placeholder="Search..."
+        style="padding: 6px 10px; border-radius: 4px; border: none; font-size: 13px; width: 140px;" />
+    </form>
+
+    <a routerLink="/blog" style="color: white; text-decoration: none; font-size: 14px; opacity: 0.85;">Blog</a>
     <select [ngModel]="currentLanguage" (change)="switchLanguage($event)" style="padding: 6px 10px; border-radius: 4px; border: none; font-size: 13px; cursor: pointer;">
       <option *ngFor="let lang of languages" [value]="lang.code">{{ lang.label }}</option>
     </select>

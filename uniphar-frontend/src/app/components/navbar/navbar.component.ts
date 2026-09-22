@@ -17,6 +17,7 @@ export class NavbarComponent implements OnInit {
   activeBrand: string = 'uniphar-group';
   showMedtech = false;
   showPharma = false;
+  searchQuery: string = '';
 
   languages = [
     { code: 'en-US', label: 'English' },
@@ -47,5 +48,12 @@ export class NavbarComponent implements OnInit {
   switchLanguage(event: Event): void {
     const select = event.target as HTMLSelectElement;
     this.languageService.setLanguage(select.value);
+  }
+
+  runSearch(): void {
+    const term = this.searchQuery.trim();
+    if (!term) return;
+    this.router.navigate(['/search'], { queryParams: { q: term } });
+    this.searchQuery = '';
   }
 }
