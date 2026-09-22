@@ -31,13 +31,25 @@ public class UmbracoService
 
     // Fetches all content items of a given Document Type alias, e.g. "servicePage"
     // Not domain-relative — queries across the whole Umbraco install regardless of brand.
+    // public async Task<string> GetContentByType(string contentType, string culture = "en-US")
+    // {
+    //     var client = _httpClientFactory.CreateClient("UmbracoClient");
+    //     client.DefaultRequestHeaders.Remove("Accept-Language");
+    //     client.DefaultRequestHeaders.Add("Accept-Language", culture);
+
+    //     var response = await client.GetAsync($"/umbraco/delivery/api/v2/content?filter=contentType:{contentType}");
+    //     response.EnsureSuccessStatusCode();
+
+    //     return await response.Content.ReadAsStringAsync();
+    // }
     public async Task<string> GetContentByType(string contentType, string culture = "en-US")
     {
         var client = _httpClientFactory.CreateClient("UmbracoClient");
         client.DefaultRequestHeaders.Remove("Accept-Language");
         client.DefaultRequestHeaders.Add("Accept-Language", culture);
 
-        var response = await client.GetAsync($"/umbraco/delivery/api/v2/content?filter=contentType:{contentType}");
+        var response = await client.GetAsync(
+            $"/umbraco/delivery/api/v2/content?filter=contentType:{contentType}&take=100");
         response.EnsureSuccessStatusCode();
 
         return await response.Content.ReadAsStringAsync();

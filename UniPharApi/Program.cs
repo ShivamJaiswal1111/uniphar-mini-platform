@@ -26,8 +26,17 @@ builder.Services.AddHttpClient("UmbracoClient", client =>
     ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
 });
 
+builder.Services.AddHttpClient("LegacyClient", client =>
+{
+    client.BaseAddress = new Uri("http://localhost:2271");
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<UniPharApi.Services.UmbracoService>();
+builder.Services.AddScoped<MigrationService>();
+builder.Services.AddScoped<BlogService>();
+builder.Services.AddScoped<SearchService>();
 var app = builder.Build();
 
 // ---- PIPELINE ----
