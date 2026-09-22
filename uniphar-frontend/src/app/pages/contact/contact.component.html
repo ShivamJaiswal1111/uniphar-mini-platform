@@ -6,9 +6,17 @@
     <div class="skeleton" style="height: 24px; width: 40%;"></div>
   </div>
 </div>
+
 <div *ngIf="error" style="padding: 60px 32px; text-align: center; color: red;">{{ error }}</div>
+
 <div *ngIf="contact && !loading" class="page-fade">
-  <app-hero heading="Contact Us" subtext="Get in touch with the Uniphar team"></app-hero>
+  
+  <app-hero
+    [heading]="contact.heroHeading || 'Contact Us'"
+    [subtext]="contact.heroSubtext || 'Get in touch with the Uniphar team'"
+    [imageUrl]="contact.heroImageUrl || ''">
+  </app-hero>
+  <app-breadcrumb [crumbs]="contact?.breadcrumbs || []" />
   <section style="padding: 60px 32px; max-width: 800px; margin: 0 auto;">
     <div style="display: grid; gap: 24px;">
       <div *ngIf="contact.address" style="display: flex; gap: 16px; align-items: flex-start;">
@@ -25,7 +33,12 @@
       </div>
     </div>
   </section>
-
+  <section style="padding: 20px 32px 60px; max-width: 800px; margin: 0 auto;">
+    <h2 style="font-size: 22px; font-weight: 600; color: #1b264f; margin-bottom: 24px;">Send Us a Message</h2>
+    <div style="background: #fff; border: 1px solid #e5e5e5; border-radius: 10px; padding: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+      <app-contact-form [brandSlug]="brandSlug"></app-contact-form>
+    </div>
+  </section>
   <section style="padding: 0 32px 60px; max-width: 800px; margin: 0 auto;" *ngIf="contact.officeImageUrl || (contact.latitude != null && contact.longitude != null)">
     <h2 style="font-size: 22px; font-weight: 600; color: #1b264f; margin-bottom: 16px;">Our Office</h2>
     <div style="display: flex; gap: 24px; flex-wrap: wrap;">

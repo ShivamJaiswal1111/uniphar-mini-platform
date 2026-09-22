@@ -8,11 +8,12 @@ import { NavbarComponent } from '../../components/navbar/navbar.component';
 import { HeroComponent } from '../../components/hero/hero.component';
 import { FooterComponent } from '../../components/footer/footer.component';
 import { Service } from '../../models/service.model';
+import { BreadcrumbComponent } from '../../components/breadcrumb/breadcrumb.component';
 
 @Component({
   selector: 'app-service-detail',
   standalone: true,
-  imports: [CommonModule, NavbarComponent, HeroComponent, FooterComponent],
+  imports: [CommonModule, NavbarComponent, HeroComponent, FooterComponent, BreadcrumbComponent],
   templateUrl: './service-detail.component.html'
 })
 export class ServiceDetailComponent implements OnInit, OnDestroy {

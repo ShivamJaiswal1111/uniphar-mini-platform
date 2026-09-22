@@ -8,6 +8,7 @@ import { LanguageService } from '../../services/language.service';
 import { NavbarComponent } from '../../components/navbar/navbar.component';
 import { HeroComponent } from '../../components/hero/hero.component';
 import { FooterComponent } from '../../components/footer/footer.component';
+import { BreadcrumbComponent } from '../../components/breadcrumb/breadcrumb.component';
 
 interface Goal {
   title: string;
@@ -20,14 +21,16 @@ interface SustainabilityData {
   heroHeading: string;
   heroSubtext: string;
   overviewText: string;
+  heroImageUrl: string | null;
   goals: Goal[];
   esgReportUrl: string;
+  breadcrumbs: { title: string; url: string | null }[];
 }
 
 @Component({
   selector: 'app-sustainability',
   standalone: true,
-  imports: [CommonModule, NavbarComponent, HeroComponent, FooterComponent],
+  imports: [CommonModule, NavbarComponent, HeroComponent, FooterComponent, BreadcrumbComponent],
   templateUrl: './sustainability.html',
   styleUrl: './sustainability.css'
 })

@@ -1,20 +1,23 @@
 <app-navbar />
-<div *ngIf="loading" class="page-fade" style="padding: 0;">
-  <div class="skeleton" style="height: 400px; border-radius: 0;"></div>
-  <div style="padding: 60px 32px; max-width: 1200px; margin: 0 auto;">
-    <div class="skeleton" style="height: 36px; width: 50%; margin-bottom: 16px;"></div>
-    <div class="skeleton" style="height: 20px; width: 80%;"></div>
-  </div>
+
+<!-- Error state -->
+<div *ngIf="error" style="padding: 60px 32px; text-align: center; color: red;">
+  {{ error }}
 </div>
-<div *ngIf="error" style="padding: 60px 32px; text-align: center; color: red;">{{ error }}</div>
+
+<!-- Hero — always rendered, HeroComponent handles its own skeleton internally -->
+<app-hero
+  [loading]="loading"
+  [heading]="page?.heroHeading || ''"
+  [subtext]="page?.heroSubtext || ''"
+  [imageUrl]="page?.heroImageUrl || ''"
+  [ctaText]="page?.ctaButtonText || 'Learn More'"
+  [ctaLink]="page?.ctaButtonLink || '/about'">
+</app-hero>
+
+<!-- Page content — only shown once data is ready -->
 <div *ngIf="page && !loading" class="page-fade">
-  <app-hero
-    [heading]="page.heroHeading"
-    [subtext]="page.heroSubtext"
-    [imageUrl]="page.heroImageUrl"
-    [ctaText]="page.ctaButtonText || 'Learn More'"
-    [ctaLink]="page.ctaButtonLink || '/about'">
-  </app-hero>
+  <app-breadcrumb [crumbs]="page?.breadcrumbs || []" />
 
   <section style="padding: 60px 32px; max-width: 1200px; margin: 0 auto;">
     <h2 style="font-size: 28px; font-weight: 600; color: #1b264f; margin-bottom: 16px;">
@@ -33,5 +36,7 @@
       <p style="color: #444;">{{ card.description }}</p>
     </a>
   </section>
+
 </div>
+
 <app-footer />

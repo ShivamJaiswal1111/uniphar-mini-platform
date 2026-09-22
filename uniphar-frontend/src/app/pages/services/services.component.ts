@@ -5,15 +5,16 @@ import { Subject, combineLatest, takeUntil } from 'rxjs';
 import { ApiService } from '../../services/api.service';
 import { LanguageService } from '../../services/language.service';
 import { NavbarComponent } from '../../components/navbar/navbar.component';
-import { HeroComponent } from '../../components/hero/hero.component';
+// import { HeroComponent } from '../../components/hero/hero.component';
 import { FooterComponent } from '../../components/footer/footer.component';
 import { Service } from '../../models/service.model';
+import { BreadcrumbComponent } from '../../components/breadcrumb/breadcrumb.component';
 
 
 @Component({
   selector: 'app-services',
   standalone: true,
-  imports: [CommonModule, RouterLink, NavbarComponent, HeroComponent, FooterComponent],
+  imports: [CommonModule, RouterLink, NavbarComponent, FooterComponent, BreadcrumbComponent],
   templateUrl: './services.component.html'
 })
 export class ServicesComponent implements OnInit, OnDestroy {

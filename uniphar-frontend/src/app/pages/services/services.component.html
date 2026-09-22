@@ -1,16 +1,58 @@
 <app-navbar />
-<div *ngIf="loading" style="padding: 60px 32px; text-align: center; color: #666;">Loading...</div>
-<div *ngIf="error" style="padding: 60px 32px; text-align: center; color: red;">{{ error }}</div>
-<ng-container *ngIf="!loading && !error">
-  <app-hero heading="Our Services" subtext="Innovative solutions for healthcare professionals"></app-hero>
-  <section style="padding: 60px 32px; max-width: 1200px; margin: 0 auto;">
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px;">
-      <div *ngFor="let service of services" style="background: white; border-radius: 8px; padding: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
-        <h3 style="font-size: 20px; font-weight: 600; color: #1b264f; margin: 0 0 12px;">{{ service.title }}</h3>
-        <p style="color: #666; margin: 0 0 20px;" [innerHTML]="service.description"></p>
-        <a [routerLink]="['/', brandSlug, 'services', service.slug]" style="color: #0066cc; text-decoration: none; font-weight: 500;">Read More →</a>
+
+<div style="min-height: calc(100vh - 140px);">
+
+  <!-- Error state -->
+  <div *ngIf="error" style="padding: 60px 32px; text-align: center; color: red;">{{ error }}</div>
+
+  <!-- Page Header -->
+  <section style="background: #1b264f; padding: 60px 32px;">
+    <div style="max-width: 1200px; margin: 0 auto;">
+      <h1 style="color: white; font-size: 36px; font-weight: 600; margin: 0 0 12px;">
+        {{ brandSlug === 'uniphar-pharma' ? 'Our Products' : 'Our Services' }}
+      </h1>
+      <p style="color: rgba(255,255,255,0.75); font-size: 16px; margin: 0;">
+        {{ brandSlug === 'uniphar-pharma' ? 'A comprehensive portfolio of pharmaceutical distribution solutions' : 'Innovative solutions for healthcare professionals' }}
+      </p>
+    </div>
+  </section>
+
+  <app-breadcrumb [crumbs]="[{title: 'Home', url: '/'}, {title: 'Services', url: null}]" />
+
+  <!-- Skeleton -->
+  <section *ngIf="loading" style="padding: 60px 32px; background: #f5f5f5;">
+    <div style="max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px;">
+      <div *ngFor="let i of [1,2,3]" style="background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+        <div style="padding: 32px 32px 0;">
+          <div class="skeleton" style="width: 48px; height: 48px; border-radius: 50%; margin-bottom: 16px;"></div>
+        </div>
+        <div style="padding: 0 32px 32px; display: flex; flex-direction: column; gap: 12px;">
+          <div class="skeleton" style="height: 20px; width: 70%;"></div>
+          <div class="skeleton" style="height: 14px; width: 100%;"></div>
+          <div class="skeleton" style="height: 14px; width: 85%;"></div>
+          <div class="skeleton" style="height: 14px; width: 90%;"></div>
+          <div class="skeleton" style="height: 14px; width: 80px; margin-top: 4px;"></div>
+        </div>
       </div>
     </div>
   </section>
-</ng-container>
+
+  <!-- Real services grid -->
+  <div *ngIf="!loading && !error" class="page-fade">
+    <section style="padding: 60px 32px; max-width: 1200px; margin: 0 auto;">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px;">
+        <div *ngFor="let service of services" style="background: white; border-radius: 8px; padding: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+          <img *ngIf="service.iconUrl" [src]="service.iconUrl" style="width: 48px; height: 48px; object-fit: cover; margin-bottom: 16px; border-radius: 4px;" />
+          <h3 style="font-size: 20px; font-weight: 600; color: #1b264f; margin: 0 0 12px;">{{ service.title }}</h3>
+          <p style="color: #666; margin: 0 0 20px;" [innerHTML]="service.description"></p>
+          <a [routerLink]="['/', brandSlug, 'services', service.slug]" style="color: #0066cc; text-decoration: none; font-weight: 500;">
+            {{ brandSlug === 'uniphar-pharma' ? 'Learn More' : 'Read More' }} →
+          </a>
+        </div>
+      </div>
+    </section>
+  </div>
+
+</div>
+
 <app-footer />

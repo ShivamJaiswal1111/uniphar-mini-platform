@@ -8,6 +8,8 @@ import { NavbarComponent } from '../../components/navbar/navbar.component';
 import { HeroComponent } from '../../components/hero/hero.component';
 import { FooterComponent } from '../../components/footer/footer.component';
 import { MapComponent } from '../../components/map/map';
+import { ContactFormComponent } from '../../components/contact-form/contact-form.component';
+import { BreadcrumbComponent } from '../../components/breadcrumb/breadcrumb.component';
 
 interface ContactData {
   address: string;
@@ -17,12 +19,16 @@ interface ContactData {
   officeImageUrl: string;
   latitude: number | null;
   longitude: number | null;
+  heroHeading: string | null;
+  heroSubtext: string | null;
+  heroImageUrl: string | null;
+  breadcrumbs: { title: string; url: string | null }[];
 }
 
 @Component({
   selector: 'app-contact',
   standalone: true,
-  imports: [CommonModule, NavbarComponent, HeroComponent, FooterComponent, MapComponent],
+  imports: [CommonModule, NavbarComponent, HeroComponent, FooterComponent, MapComponent, ContactFormComponent, BreadcrumbComponent],
   templateUrl: './contact.component.html'
 })
 export class ContactComponent implements OnInit, OnDestroy {

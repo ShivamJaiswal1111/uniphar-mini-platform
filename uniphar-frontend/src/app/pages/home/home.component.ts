@@ -9,11 +9,12 @@ import { HeroComponent } from '../../components/hero/hero.component';
 import { FooterComponent } from '../../components/footer/footer.component';
 import { Page } from '../../models/page.model';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { BreadcrumbComponent } from '../../components/breadcrumb/breadcrumb.component';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, RouterLink, NavbarComponent, HeroComponent, FooterComponent],
+  imports: [CommonModule, RouterLink, NavbarComponent, HeroComponent, FooterComponent,BreadcrumbComponent],
   templateUrl: './home.component.html'
 })
 export class HomeComponent implements OnInit, OnDestroy {

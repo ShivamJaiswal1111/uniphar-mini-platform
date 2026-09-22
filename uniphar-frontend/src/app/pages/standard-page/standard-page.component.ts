@@ -6,11 +6,12 @@ import { Page } from '../../models/page.model';
 import { NavbarComponent } from '../../components/navbar/navbar.component';
 import { HeroComponent } from '../../components/hero/hero.component';
 import { FooterComponent } from '../../components/footer/footer.component';
+import { BreadcrumbComponent } from '../../components/breadcrumb/breadcrumb.component';
 
 @Component({
   selector: 'app-standard-page',
   standalone: true,
-  imports: [CommonModule, NavbarComponent, HeroComponent, FooterComponent],
+  imports: [CommonModule, NavbarComponent, HeroComponent, FooterComponent, BreadcrumbComponent],
   templateUrl: './standard-page.component.html'
 })
 export class StandardPageComponent implements OnInit {
@@ -26,25 +27,31 @@ export class StandardPageComponent implements OnInit {
 
   ngOnInit(): void {
     this.route.paramMap.subscribe(params => {
-      const brandSlug = params.get('brandSlug') || 'uniphar-group';
-      const pageSlug = params.get('pageSlug') || this.route.snapshot.url[0]?.path || '';
+        const brandSlug = params.get('brandSlug') 
+            || this.route.snapshot.data['brandSlug'] 
+            || 'uniphar-group';
+        const pageSlug = params.get('pageSlug') || this.route.snapshot.url[0]?.path || '';
 
-      this.loading = true;
-      this.error = null;
+        this.loading = true;
+        this.error = null;
 
-      this.pageService.getPage(brandSlug, pageSlug).subscribe({
+        const request = brandSlug === 'legacy'
+        ? this.pageService.getLegacyPage(pageSlug)
+        : this.pageService.getPage(brandSlug, pageSlug);
+
+        request.subscribe({
         next: (data) => {
-          this.page = data;
-          this.loading = false;
-          this.cdr.detectChanges();
+            this.page = data;
+            this.loading = false;
+            this.cdr.detectChanges();
         },
         error: (err) => {
-          this.error = 'Failed to load page';
-          this.loading = false;
-          this.cdr.detectChanges();
-          console.error(err);
+            this.error = 'Failed to load page';
+            this.loading = false;
+            this.cdr.detectChanges();
+            console.error(err);
         }
-      });
+        });
     });
-  }
+    }
 }

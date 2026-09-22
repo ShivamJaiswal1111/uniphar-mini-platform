@@ -1,18 +1,32 @@
 <app-navbar />
-<div *ngIf="loading" style="padding: 60px 32px; text-align: center; color: #666;">Loading...</div>
+
+<!-- Error state -->
 <div *ngIf="error" style="padding: 60px 32px; text-align: center; color: red;">{{ error }}</div>
-<ng-container *ngIf="service && !loading">
-  <app-hero [heading]="service.title" subtext=""></app-hero>
+
+<!-- Hero — always rendered -->
+<app-hero
+  [loading]="loading"
+  [heading]="service?.heroHeading || service?.title || ''"
+  [subtext]="service?.heroSubtext || ''"
+  [imageUrl]="service?.heroImageUrl || ''">
+</app-hero>
+
+<!-- Content — only when data is ready -->
+<div *ngIf="service && !loading" class="page-fade">
+  <app-breadcrumb [crumbs]="service?.breadcrumbs || []" />
   <section style="padding: 60px 32px; max-width: 900px; margin: 0 auto;">
     <div [innerHTML]="service.description" style="color: #444; font-size: 16px; line-height: 1.8; margin-bottom: 40px;"></div>
     <div *ngIf="service.features && service.features.length > 0">
       <h3 style="font-size: 20px; font-weight: 600; color: #1b264f; margin-bottom: 16px;">Key Features</h3>
       <ul style="list-style: none; padding: 0; display: grid; gap: 12px;">
-        <li *ngFor="let feature of service.features" style="padding: 16px; background: #f5f5f5; border-radius: 6px; color: #444;">
-          {{ feature }}
+        <li *ngFor="let feature of service.features"
+          style="padding: 16px; background: #f5f5f5; border-radius: 6px; border-left: 3px solid #1b264f;">
+          <strong style="color: #1b264f; display: block; margin-bottom: 4px;">{{ feature.title }}</strong>
+          <span style="color: #444; font-size: 14px;">{{ feature.description }}</span>
         </li>
       </ul>
     </div>
   </section>
-</ng-container>
+</div>
+
 <app-footer />
