@@ -24,3 +24,113 @@
   border: 0;
   display: block;
 }
+
+/* ── Skeleton base ── */
+.skeleton {
+  background: #e0e0e0;
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* shimmer sweep */
+.skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255,255,255,0.6) 50%,
+    transparent 100%
+  );
+  animation: shimmer 1.4s infinite;
+}
+
+@keyframes shimmer {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* ── Hero skeleton ── */
+.skeleton-hero {
+  min-height: 400px;
+  background: #c8c8c8;
+  padding: 60px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.skeleton-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255,255,255,0.4) 50%,
+    transparent 100%
+  );
+  animation: shimmer 1.4s infinite;
+}
+
+.skeleton-hero .sk-line {
+  background: #b0b0b0;
+  border-radius: 4px;
+}
+
+/* ── Stats skeleton ── */
+.skeleton-stats {
+  padding: 60px 32px;
+  background: #f5f5f5;
+}
+
+.skeleton-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.skeleton-stat-card {
+  background: white;
+  padding: 32px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+/* ── Card skeleton ── */
+.skeleton-cards {
+  padding: 60px 32px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.skeleton-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+.skeleton-card {
+  background: white;
+  border-radius: 8px;
+  padding: 32px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+@keyframes shimmer {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}

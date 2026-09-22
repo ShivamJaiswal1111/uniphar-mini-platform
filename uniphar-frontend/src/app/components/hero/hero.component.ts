@@ -14,6 +14,7 @@ export class HeroComponent {
   @Input() imageUrl: string = '';
   @Input() ctaText: string = '';
   @Input() ctaLink: string = '';
+  @Input() loading: boolean = false;
 
   isExternal(url: string): boolean {
     return url?.startsWith('http') || url?.startsWith('https') || url?.startsWith('/media');
