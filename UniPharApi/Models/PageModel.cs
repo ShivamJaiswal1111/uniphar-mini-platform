@@ -29,4 +29,8 @@ public class PageModel
     public List<NavigationCardModel> FeaturedSections { get; set; } = new();
 
     public string Culture { get; set; } = "en-US";   // ← this is the missing line
+
+    public List<BreadcrumbItem> Breadcrumbs { get; set; } = new();
+    public string? BrandSlug { get; set; }
+    
 }

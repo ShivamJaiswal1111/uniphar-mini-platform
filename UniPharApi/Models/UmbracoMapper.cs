@@ -4,6 +4,19 @@ namespace UniPharApi.Models;
 
 public static class UmbracoMapper
 {
+    private static readonly string UmbracoBaseUrl = "https://localhost:44335";
+
+    public static string ResolveMediaUrls(string html)
+    {
+        if (string.IsNullOrEmpty(html)) return html;
+
+        // Rewrites src="/media/xxxxx/file.jpg" to src="http://localhost:5220/api/media/xxxxx/file.jpg"
+        return System.Text.RegularExpressions.Regex.Replace(
+            html,
+            @"src=""/media/([^""]*)""",
+            m => $"src=\"http://localhost:5220/api/media/{m.Groups[1].Value}\""
+        );
+    }
     public static BrandModel MapToBrand(string rawJson, string requestedCulture)
     {
         using var doc = JsonDocument.Parse(rawJson);
@@ -76,13 +89,44 @@ public static class UmbracoMapper
             IntroductionHeading = GetStringOrNull(props, "introductionHeading"),
             IntroductionText = ExtractRichText(props, "introductionText"),
             BrandColor = GetStringOrNull(props, "brandColor"),
-            FeaturedSections = MapNavigationCards(props, "featuredSections"),   // ← ADD this line
+            FeaturedSections = MapNavigationCards(props, "featuredSections"),   
 
-            Culture = requestedCulture
+            BrandSlug = ExtractBrandSlug(root),
+            Culture = requestedCulture,
+            Breadcrumbs = BuildBreadcrumbs(root, root.GetProperty("name").GetString() ?? string.Empty)
+            
+            
+        };
+        
+    }
+
+    public static PageModel MapFromLegacySite(string rawJson)
+    {
+        using var doc = JsonDocument.Parse(rawJson);
+        var root = doc.RootElement;
+
+        return new PageModel
+        {
+            Id = "legacy-" + Guid.NewGuid().ToString("N")[..8], // legacy source has no real id
+            Title = root.GetProperty("page_title").GetString() ?? string.Empty,
+            Slug = "about", // hardcoded for this one sample file, for now
+            ContentType = "legacyPage",
+
+            BodyContent = root.TryGetProperty("page_body", out var body) ? body.GetString() : null,
+            MetaTitle = root.TryGetProperty("seo_title", out var seoTitle) ? seoTitle.GetString() : null,
+            MetaDescription = root.TryGetProperty("seo_description", out var seoDesc) ? seoDesc.GetString() : null,
+
+            // Everything Umbraco has that this legacy source doesn't — left null/default, same as any page missing optional fields
+            HeroHeading = null,
+            HeroSubtext = null,
+            HeroImageUrl = null,
+            SidebarContent = null,
+            FeaturedSections = new List<NavigationCardModel>(),
+
+            Culture = "en-US"
         };
     }
 
-    // ↓↓↓ ADD this new method here, right after MapToPage ↓↓↓
     public static List<NavigationCardModel> MapNavigationCards(JsonElement props, string propertyName)
     {
         var results = new List<NavigationCardModel>();
@@ -126,12 +170,16 @@ public static class UmbracoMapper
 
         return new InvestorOverviewModel
         {
+            HeroHeading = GetStringOrNull(props, "heroHeading"),
+            HeroSubtext = GetStringOrNull(props, "heroSubtext"),
+            HeroImageUrl = ExtractFirstMediaUrl(props, "heroImage"),
             Introduction = ExtractRichText(props, "introduction"),
             KeyStats = MapKeyStats(props, "keyStats"),
             AnnualReportUrl = ExtractFirstMediaUrl(props, "annualReportPdf"),
-            PresentationUrl = ExtractFirstMediaUrl(props, "resultPresentationPdf"), 
+            PresentationUrl = ExtractFirstMediaUrl(props, "resultPresentationPdf"),
             StockTickerEmbed = GetStringOrNull(props, "stockTickerEmbed"),
-            Year = GetIntOrNull(props, "year") ?? 0
+            Year = GetIntOrNull(props, "year") ?? 0,
+            Breadcrumbs = BuildBreadcrumbs(root, root.GetProperty("name").GetString() ?? string.Empty)
         };
     }
 
@@ -178,13 +226,16 @@ public static class UmbracoMapper
             Id = element.GetProperty("id").GetString() ?? string.Empty,
             Title = element.GetProperty("name").GetString() ?? string.Empty,
             Slug = ExtractSlug(element),
+            BrandSlug = ExtractBrandSlug(element),
             HeroHeading = GetStringOrNull(props, "heroHeading"),
             HeroSubtext = GetStringOrNull(props, "heroSubtext"),
             HeroImageUrl = ExtractFirstMediaUrl(props, "heroImage"),
             Description = ExtractRichText(props, "serviceDescription"),
             IconUrl = ExtractFirstMediaUrl(props, "serviceIcon"),
             IsFeatured = GetBoolOrDefault(props, "isFeaturedService"),
-            Features = MapFeatures(props, "keyFeatured")
+            Features = MapFeatures(props, "keyFeatured"),
+            
+            Breadcrumbs = BuildBreadcrumbs(element, element.GetProperty("name").GetString() ?? string.Empty)
         };
     }
 
@@ -214,13 +265,17 @@ public static class UmbracoMapper
 
         return new ContactModel
         {
+            HeroHeading = GetStringOrNull(props, "heroHeading"),
+            HeroSubtext = GetStringOrNull(props, "heroSubtext"),
+            HeroImageUrl = ExtractFirstMediaUrl(props, "heroImage"),
             Address = GetStringOrNull(props, "address"),
             Phone = GetStringOrNull(props, "phoneNumBer"),
             Email = GetStringOrNull(props, "emailAddress"),
             MapEmbed = GetStringOrNull(props, "googleMapEmbed"),
             OfficeImageUrl = ExtractFirstMediaUrl(props, "officeImage"),
             Latitude = GetDoubleOrNull(props, "latitude"),
-            Longitude = GetDoubleOrNull(props, "longitude")
+            Longitude = GetDoubleOrNull(props, "longitude"),
+            Breadcrumbs = BuildBreadcrumbs(root, root.GetProperty("name").GetString() ?? string.Empty),
         };
     }
     public static SustainabilityModel MapToSustainability(string rawJson)
@@ -233,6 +288,7 @@ public static class UmbracoMapper
         {
             HeroHeading = GetStringOrNull(props, "heroHeading") ?? string.Empty,
             HeroSubtext = GetStringOrNull(props, "heroSubtext") ?? string.Empty,
+            HeroImageUrl = ExtractFirstMediaUrl(props, "heroImage"),
             OverviewText = ExtractRichText(props, "overviewText") ?? string.Empty,
             EsgReportUrl = ExtractFirstMediaUrl(props, "esgReportPdf")
         };
@@ -247,6 +303,8 @@ public static class UmbracoMapper
                 Progress = GetIntOrNull(itemProps, "goalProgress") ?? 0
             });
         }
+
+        model.Breadcrumbs = BuildBreadcrumbs(root, root.GetProperty("name").GetString() ?? string.Empty);
 
         return model;
     }
@@ -308,14 +366,22 @@ public static class UmbracoMapper
         return $"http://localhost:5220/api/media/{trimmed}";
     }
 
+    private static string? ExtractBrandSlug(JsonElement root)
+    {
+        if (!root.TryGetProperty("route", out var route)) return null;
+        if (!route.TryGetProperty("startItem", out var startItem)) return null;
+        if (!startItem.TryGetProperty("path", out var path)) return null;
+        return path.GetString();
+    }
+
     private static string? ExtractRichText(JsonElement props, string propertyName)
     {
         if (!props.TryGetProperty(propertyName, out var rte)) return null;
-        return rte.ValueKind == JsonValueKind.Object && rte.TryGetProperty("markup", out var markup)
-            ? markup.GetString()
+        var markup = rte.ValueKind == JsonValueKind.Object && rte.TryGetProperty("markup", out var m)
+            ? m.GetString()
             : null;
+        return ResolveMediaUrls(markup);
     }
-
     private static string? ExtractLinkUrl(JsonElement props, string propertyName)
     {
         if (!props.TryGetProperty(propertyName, out var link)) return null;
@@ -383,5 +449,62 @@ public static class UmbracoMapper
                 yield return itemProps;
             }
         }
+    }
+    private static List<BreadcrumbItem> BuildBreadcrumbs(JsonElement root, string pageTitle)
+    {
+        var crumbs = new List<BreadcrumbItem>
+        {
+            new BreadcrumbItem { Title = "Home", Url = "/" }
+        };
+
+        if (!root.TryGetProperty("route", out var route)) 
+            return crumbs;
+
+        // Get brand slug from startItem
+        var brandSlug = string.Empty;
+        if (route.TryGetProperty("startItem", out var startItem) &&
+            startItem.TryGetProperty("path", out var startPath))
+        {
+            brandSlug = startPath.GetString() ?? string.Empty;
+        }
+
+        // Get full path e.g. "/investors/results-centre"
+        var fullPath = route.TryGetProperty("path", out var pathProp)
+            ? pathProp.GetString() ?? string.Empty
+            : string.Empty;
+
+        var trimmed = fullPath.Trim('/');
+
+        // Root node — no intermediate crumbs, just current page
+        if (string.IsNullOrEmpty(trimmed))
+        {
+            crumbs.Add(new BreadcrumbItem { Title = pageTitle, Url = null });
+            return crumbs;
+        }
+
+        var segments = trimmed.Split('/');
+        var accumulated = string.IsNullOrEmpty(brandSlug) ? "" : $"/{brandSlug}";
+
+        // All segments except last are clickable parents
+        for (int i = 0; i < segments.Length - 1; i++)
+        {
+            accumulated += $"/{segments[i]}";
+            crumbs.Add(new BreadcrumbItem
+            {
+                Title = ToTitleCase(segments[i]),
+                Url = accumulated
+            });
+        }
+
+        // Last segment is current page — not clickable
+        crumbs.Add(new BreadcrumbItem { Title = pageTitle, Url = null });
+
+        return crumbs;
+    }
+
+    private static string ToTitleCase(string slug)
+    {
+        return System.Globalization.CultureInfo.CurrentCulture
+            .TextInfo.ToTitleCase(slug.Replace("-", " "));
     }
 }
