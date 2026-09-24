@@ -1,52 +1,47 @@
-﻿@using ContentModels = Umbraco.Cms.Web.Common.PublishedModels
-@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage<ContentModels.SustainabilityPage>
+﻿@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage
 @{
     Layout = null;
+    var rootName = Model.Root()?.Name ?? "";
+    var overviewText = Model.Value<Umbraco.Cms.Core.Strings.IHtmlEncodedString>("overviewText");
+    var goals = Model.Value<Umbraco.Cms.Core.Models.Blocks.BlockListModel>("sustainabilityGoals");
 }
 <!DOCTYPE html>
 <html>
 <head><title>@Model.Name</title></head>
 <body style="font-family: sans-serif; margin: 0;">
-	@{
-		var rootName = Model.Root()?.Name ?? "";
-	}
-	<nav style="background:#111; padding: 16px 32px; display:flex; gap: 24px;">
-		<a href="/" style="color:white; text-decoration:none;">Home</a>
-
-		@if (rootName == "Uniphar Group")
-		{
-			<a href="/about-us/" style="color:white; text-decoration:none;">About</a>
-			<a href="/investors/" style="color:white; text-decoration:none;">Investors</a>
-			<a href="/sustainability/" style="color:white; text-decoration:none;">Sustainability</a>
-		}
-		else if (rootName == "Uniphar Medtech")
-		{
-			<a href="/services/" style="color:white; text-decoration:none;">Services</a>
-		}
-		else if (rootName == "Uniphar Pharma")
-		{
-			<a href="/products/" style="color:white; text-decoration:none;">Products</a>
-		}
-
-		<a href="/contact/" style="color:white; text-decoration:none;">Contact</a>
-	</nav>
+    <nav style="background:#111; padding: 16px 32px; display:flex; gap: 24px;">
+        <a href="/" style="color:white; text-decoration:none;">Home</a>
+        @if (rootName == "Uniphar Group")
+        {
+            <a href="/about-us/" style="color:white; text-decoration:none;">About</a>
+            <a href="/investors/" style="color:white; text-decoration:none;">Investors</a>
+            <a href="/sustainability/" style="color:white; text-decoration:none;">Sustainability</a>
+        }
+        else if (rootName == "Uniphar Medtech")
+        {
+            <a href="/services/" style="color:white; text-decoration:none;">Services</a>
+        }
+        else if (rootName == "Uniphar Pharma")
+        {
+            <a href="/products/" style="color:white; text-decoration:none;">Products</a>
+        }
+        <a href="/contact/" style="color:white; text-decoration:none;">Contact</a>
+    </nav>
     <header style="background:#00843d; color:white; padding: 60px 32px;">
         <h1>@Model.Name</h1>
     </header>
     <section style="padding: 40px 32px;">
-        <div>@Html.Raw(Model.OverviewText)</div>
+        <div>@Html.Raw(overviewText)</div>
     </section>
-
-    @if (Model.SustainabilityGoals != null && Model.SustainabilityGoals.Any())
+    @if (goals != null && goals.Any())
     {
         <section style="padding: 0 32px 40px;">
-            @foreach (var block in Model.SustainabilityGoals)
+            @foreach (var block in goals)
             {
-                var goal = block.Content;
                 <div style="margin-bottom:20px;">
-                    <h3>@goal.Value("goalTitle")</h3>
-                    <p>@goal.Value("goalDescription")</p>
-                    <p>Target: @goal.Value("goalTarget") — Progress: @goal.Value("goalProgress")%</p>
+                    <h3>@block.Content.Value("goalTitle")</h3>
+                    <p>@block.Content.Value("goalDescription")</p>
+                    <p>Target: @block.Content.Value("goalTarget") — Progress: @block.Content.Value("goalProgress")%</p>
                 </div>
             }
         </section>
