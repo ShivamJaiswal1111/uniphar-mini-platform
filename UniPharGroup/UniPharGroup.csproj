@@ -8,10 +8,11 @@
 
   <ItemGroup>
     <PackageReference Include="UmbGeo" Version="17.0.0" />
-    <PackageReference Include="Umbraco.Cms" Version="17.0.0" />
-    <PackageReference Include="Umbraco.Cms.Api.Delivery" Version="17.0.0" />
-    <PackageReference Include="Umbraco.Cms.Api.Management" Version="17.0.0" />
+    <PackageReference Include="Umbraco.Cms" Version="17.5.1" />
+    <PackageReference Include="Umbraco.Cms.Api.Delivery" Version="17.5.1" />
+    <PackageReference Include="Umbraco.Cms.Api.Management" Version="17.5.1" />
     <PackageReference Include="Umbraco.Cms.DevelopmentMode.Backoffice" Version="17.0.0" />
+    <PackageReference Include="uSync" Version="17.3.6" />
   </ItemGroup>
 
   <ItemGroup>
@@ -26,9 +27,9 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <!-- Remove RazorCompileOnBuild and RazorCompileOnPublish when not using ModelsMode InMemoryAuto -->
+    <!-- Remove RazorCompileOnBuild and RazorCompileOnPublish when not using ModelsMode InMemoryAuto
     <RazorCompileOnBuild>false</RazorCompileOnBuild>
-    <RazorCompileOnPublish>false</RazorCompileOnPublish>
+    <RazorCompileOnPublish>false</RazorCompileOnPublish> -->
   </PropertyGroup>
 
 </Project>
