@@ -26,3 +26,4 @@ uniphar-frontend/.angular/
 # OS junk
 .DS_Store
 Thumbs.db
+.angular/
