@@ -65,7 +65,17 @@ public class BlogService
         {
             var firstImg = imgProp[0];
             if (firstImg.TryGetProperty("url", out var urlProp))
-                heroImageUrl = "http://localhost:10691" + urlProp.GetString();
+            {
+                var relativeUrl = urlProp.GetString();
+                if (!string.IsNullOrEmpty(relativeUrl))
+                {
+                    var trimmed = relativeUrl.TrimStart('/');
+                    if (trimmed.StartsWith("media/", StringComparison.OrdinalIgnoreCase))
+                        trimmed = trimmed["media/".Length..];
+
+                    heroImageUrl = $"http://localhost:5220/api/media/{trimmed}";
+                }
+            }
         }
 
         var author = props.TryGetProperty("author", out var a) ? a.GetString() : null;
