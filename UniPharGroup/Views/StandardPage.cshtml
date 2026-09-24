@@ -1,46 +1,45 @@
-﻿@using ContentModels = Umbraco.Cms.Web.Common.PublishedModels
-@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage<ContentModels.StandardPage>
+﻿@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage
 @{
     Layout = null;
+    var rootName = Model.Root()?.Name ?? "";
+    var heroHeading = Model.Value<string>("heroHeading");
+    var heroSubtext = Model.Value<string>("heroSubtext");
+    var bodyContent = Model.Value<Umbraco.Cms.Core.Strings.IHtmlEncodedString>("bodyContent");
+    var sidebarContent = Model.Value<Umbraco.Cms.Core.Strings.IHtmlEncodedString>("sidebarContent");
 }
 <!DOCTYPE html>
 <html>
 <head><title>@Model.Name</title></head>
 <body style="font-family: sans-serif; margin: 0;">
-    @{
-		var rootName = Model.Root()?.Name ?? "";
-	}
-	<nav style="background:#111; padding: 16px 32px; display:flex; gap: 24px;">
-		<a href="/" style="color:white; text-decoration:none;">Home</a>
-
-		@if (rootName == "Uniphar Group")
-		{
-			<a href="/about-us/" style="color:white; text-decoration:none;">About</a>
-			<a href="/investors/" style="color:white; text-decoration:none;">Investors</a>
-			<a href="/sustainability/" style="color:white; text-decoration:none;">Sustainability</a>
-		}
-		else if (rootName == "Uniphar Medtech")
-		{
-			<a href="/services/" style="color:white; text-decoration:none;">Services</a>
-		}
-		else if (rootName == "Uniphar Pharma")
-		{
-			<a href="/products/" style="color:white; text-decoration:none;">Products</a>
-		}
-
-		<a href="/contact/" style="color:white; text-decoration:none;">Contact</a>
-	</nav>
+    <nav style="background:#111; padding: 16px 32px; display:flex; gap: 24px;">
+        <a href="/" style="color:white; text-decoration:none;">Home</a>
+        @if (rootName == "Uniphar Group")
+        {
+            <a href="/about-us/" style="color:white; text-decoration:none;">About</a>
+            <a href="/investors/" style="color:white; text-decoration:none;">Investors</a>
+            <a href="/sustainability/" style="color:white; text-decoration:none;">Sustainability</a>
+        }
+        else if (rootName == "Uniphar Medtech")
+        {
+            <a href="/services/" style="color:white; text-decoration:none;">Services</a>
+        }
+        else if (rootName == "Uniphar Pharma")
+        {
+            <a href="/products/" style="color:white; text-decoration:none;">Products</a>
+        }
+        <a href="/contact/" style="color:white; text-decoration:none;">Contact</a>
+    </nav>
     <header style="background:#1b264f; color:white; padding: 60px 32px;">
-        <h1>@Model.HeroHeading</h1>
-        <p>@Model.HeroSubtext</p>
+        <h1>@heroHeading</h1>
+        <p>@heroSubtext</p>
     </header>
     <section style="padding: 40px 32px;">
         <h2>@Model.Name</h2>
-        <div>@Html.Raw(Model.BodyContent)</div>
-        @if (Model.SidebarContent != null)
+        <div>@Html.Raw(bodyContent)</div>
+        @if (sidebarContent != null)
         {
             <aside style="margin-top: 24px; padding: 16px; background: #f5f5f5;">
-                @Html.Raw(Model.SidebarContent)
+                @Html.Raw(sidebarContent)
             </aside>
         }
     </section>
