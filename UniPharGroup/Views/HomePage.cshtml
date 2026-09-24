@@ -1,68 +1,64 @@
-﻿@using ContentModels = Umbraco.Cms.Web.Common.PublishedModels
-@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage<ContentModels.HomePage>
+﻿@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage
 @{
     Layout = null;
+    var rootName = Model.Root()?.Name ?? "";
+    var brandColor = Model.Value<string>("brandColor");
+    var heroHeading = Model.Value<string>("heroHeading");
+    var heroSubtext = Model.Value<string>("heroSubtext");
+    var ctaText = Model.Value<string>("ctaButtonText");
+    var ctaLink = Model.Value<string>("ctaButtonLink");
+    var introHeading = Model.Value<string>("introductionHeading");
+    var introText = Model.Value<Umbraco.Cms.Core.Strings.IHtmlEncodedString>("introductionText");
+    var featuredSections = Model.Value<Umbraco.Cms.Core.Models.Blocks.BlockListModel>("featuredSections");
 }
 <!DOCTYPE html>
 <html>
-<head>
-    <title>@Model.Value("metaTitle") - @Model.Name</title>
-</head>
+<head><title>@Model.Value("metaTitle") - @Model.Name</title></head>
 <body style="font-family: sans-serif; margin: 0;">
-	@{
-		var rootName = Model.Root()?.Name ?? "";
-	}
-	<nav style="background:#111; padding: 16px 32px; display:flex; gap: 24px;">
-		<a href="/" style="color:white; text-decoration:none;">Home</a>
-
-		@if (rootName == "Uniphar Group")
-		{
-			<a href="/about-us/" style="color:white; text-decoration:none;">About</a>
-			<a href="/investors/" style="color:white; text-decoration:none;">Investors</a>
-			<a href="/sustainability/" style="color:white; text-decoration:none;">Sustainability</a>
-		}
-		else if (rootName == "Uniphar Medtech")
-		{
-			<a href="/services/" style="color:white; text-decoration:none;">Services</a>
-		}
-		else if (rootName == "Uniphar Pharma")
-		{
-			<a href="/products/" style="color:white; text-decoration:none;">Products</a>
-		}
-
-		<a href="/contact/" style="color:white; text-decoration:none;">Contact</a>
-	</nav>
-    <header style="background:@(string.IsNullOrEmpty(Model.BrandColor) ? "#1b264f" : Model.BrandColor); color:white; padding: 60px 32px;">
-        <h1>@Model.HeroHeading</h1>
-        <p>@Model.HeroSubtext</p>
-        @if (!string.IsNullOrEmpty(Model.CtaButtonText))
+    <nav style="background:#111; padding: 16px 32px; display:flex; gap: 24px;">
+        <a href="/" style="color:white; text-decoration:none;">Home</a>
+        @if (rootName == "Uniphar Group")
         {
-            <a href="@Model.CtaButtonLink" style="color:white;">@Model.CtaButtonText</a>
+            <a href="/about-us/" style="color:white; text-decoration:none;">About</a>
+            <a href="/investors/" style="color:white; text-decoration:none;">Investors</a>
+            <a href="/sustainability/" style="color:white; text-decoration:none;">Sustainability</a>
+        }
+        else if (rootName == "Uniphar Medtech")
+        {
+            <a href="/services/" style="color:white; text-decoration:none;">Services</a>
+        }
+        else if (rootName == "Uniphar Pharma")
+        {
+            <a href="/products/" style="color:white; text-decoration:none;">Products</a>
+        }
+        <a href="/contact/" style="color:white; text-decoration:none;">Contact</a>
+    </nav>
+    <header style="background:@(string.IsNullOrEmpty(brandColor) ? "#1b264f" : brandColor); color:white; padding: 60px 32px;">
+        <h1>@heroHeading</h1>
+        <p>@heroSubtext</p>
+        @if (!string.IsNullOrEmpty(ctaText))
+        {
+            <a href="@ctaLink" style="color:white;">@ctaText</a>
         }
     </header>
-
     <section style="padding: 40px 32px;">
-        <h2>@Model.IntroductionHeading</h2>
-        <div>@Html.Raw(Model.IntroductionText)</div>
+        <h2>@introHeading</h2>
+        <div>@Html.Raw(introText)</div>
     </section>
-
-    @if (Model.FeaturedSections != null && Model.FeaturedSections.Any())
+    @if (featuredSections != null && featuredSections.Any())
     {
         <section style="padding: 40px 32px; display: flex; gap: 24px; flex-wrap: wrap;">
-            @foreach (var block in Model.FeaturedSections)
+            @foreach (var block in featuredSections)
             {
-                var card = block.Content;
                 <div style="border: 1px solid #ddd; border-radius: 8px; padding: 24px; max-width: 280px;">
-                    <h3>@card.Value("cardHeading")</h3>
-                    <p>@card.Value("cardDescription")</p>
+                    <h3>@block.Content.Value("cardHeading")</h3>
+                    <p>@block.Content.Value("cardDescription")</p>
                 </div>
             }
         </section>
     }
-
     <footer style="padding: 24px 32px; background: #f5f5f5;">
         <p>&copy; 2026 @Model.Name</p>
     </footer>
 </body>
-
 </html>
