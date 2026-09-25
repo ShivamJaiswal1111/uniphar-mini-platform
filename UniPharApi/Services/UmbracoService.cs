@@ -3,81 +3,78 @@ namespace UniPharApi.Services;
 public class UmbracoService
 {
     private readonly IHttpClientFactory _httpClientFactory;
-    private readonly IConfiguration _config;
+    private readonly CacheService _cache;
+    private readonly string _umbracoPort;
 
-    public UmbracoService(IHttpClientFactory httpClientFactory, IConfiguration config)
+    public UmbracoService(IHttpClientFactory httpClientFactory, CacheService cache, IConfiguration config)
     {
         _httpClientFactory = httpClientFactory;
-        _config = config;
+        _cache = cache;
+        var baseUrl = config["UmbracoApi:BaseUrl"]!;
+        _umbracoPort = new Uri(baseUrl).Port.ToString();
     }
 
-    // Fetches a single content item using a domain-relative path (e.g. "/investors", "/contact", "/")
-    // brandSlug determines which brand's hostname is sent as the Host header, so Umbraco
-    // resolves the path against the correct root node's domain.
     public async Task<string> GetContentByPath(string domainRelativePath, string brandSlug, string culture = "en-US")
     {
-        var client = _httpClientFactory.CreateClient("UmbracoClient");
+        var version = await _cache.GetVersionAsync();
+        var cacheKey = $"content:{version}:path:{brandSlug}:{domainRelativePath}:{culture}";
 
+        var cached = await _cache.GetAsync(cacheKey);
+        if (cached != null)
+        {
+            Console.WriteLine($"[CACHE HIT]  {cacheKey}");
+            return cached;
+        }
+
+        Console.WriteLine($"[CACHE MISS] {cacheKey} — calling Umbraco");
+
+        var client = _httpClientFactory.CreateClient("UmbracoClient");
         var request = new HttpRequestMessage(HttpMethod.Get,
             $"/umbraco/delivery/api/v2/content/item{domainRelativePath}");
-        request.Headers.Host = ResolveHostname(brandSlug, culture);
+        request.Headers.Host = ResolveHostname(brandSlug);
         request.Headers.Add("Accept-Language", culture);
 
         var response = await client.SendAsync(request);
         response.EnsureSuccessStatusCode();
 
-        return await response.Content.ReadAsStringAsync();
+        var content = await response.Content.ReadAsStringAsync();
+        await _cache.SetAsync(cacheKey, content, TimeSpan.FromMinutes(10));
+
+        return content;
     }
 
-    // Fetches all content items of a given Document Type alias, e.g. "servicePage"
-    // Not domain-relative — queries across the whole Umbraco install regardless of brand.
-    // public async Task<string> GetContentByType(string contentType, string culture = "en-US")
-    // {
-    //     var client = _httpClientFactory.CreateClient("UmbracoClient");
-    //     client.DefaultRequestHeaders.Remove("Accept-Language");
-    //     client.DefaultRequestHeaders.Add("Accept-Language", culture);
-
-    //     var response = await client.GetAsync($"/umbraco/delivery/api/v2/content?filter=contentType:{contentType}");
-    //     response.EnsureSuccessStatusCode();
-
-    //     return await response.Content.ReadAsStringAsync();
-    // }
     public async Task<string> GetContentByType(string contentType, string culture = "en-US")
     {
-        var client = _httpClientFactory.CreateClient("UmbracoClient");
-        client.DefaultRequestHeaders.Remove("Accept-Language");
-        client.DefaultRequestHeaders.Add("Accept-Language", culture);
+        var version = await _cache.GetVersionAsync();
+        var cacheKey = $"content:{version}:type:{contentType}:{culture}";
 
-        var response = await client.GetAsync(
+        var cached = await _cache.GetAsync(cacheKey);
+        if (cached != null)
+        {
+            Console.WriteLine($"[CACHE HIT]  {cacheKey}");
+            return cached;
+        }
+
+        Console.WriteLine($"[CACHE MISS] {cacheKey} — calling Umbraco");
+
+        var client = _httpClientFactory.CreateClient("UmbracoClient");
+        var request = new HttpRequestMessage(HttpMethod.Get,
             $"/umbraco/delivery/api/v2/content?filter=contentType:{contentType}&take=100");
+        request.Headers.Add("Accept-Language", culture);
+
+        var response = await client.SendAsync(request);
         response.EnsureSuccessStatusCode();
 
-        return await response.Content.ReadAsStringAsync();
+        var content = await response.Content.ReadAsStringAsync();
+        await _cache.SetAsync(cacheKey, content, TimeSpan.FromMinutes(10));
+
+        return content;
     }
 
-    private static string ResolveHostname(string brandSlug, string culture = "en-US") => (brandSlug, culture) switch
-    {
-        ("uniphar-medtech", "fr-FR") => "unimedtech.localhost:44335",
-        ("uniphar-pharma", "de-DE") => "unipharma.localhost:44335",
-        ("uniphar-group", _) => "uniphargroup.localhost:44335",
-        ("uniphar-medtech", _) => "unimedtech.localhost:44335",
-        ("uniphar-pharma", _) => "unipharma.localhost:44335",
-        _ => "uniphargroup.localhost:44335"
-    };
-
-    private static string ResolveCulturePath(string culture) => culture switch
-    {
-        "fr-FR" => "/fr",
-        "de-DE" => "/de",
-        _ => ""
-    };
-
-    // Fetches a media file from Umbraco and returns it as a stream
-    // mediaPath is the full path e.g. "/media/abc123/hero.jpg"
+    // Media is not cached — streams are one-shot and binary, not worth storing in Redis
     public async Task<(Stream stream, string contentType)> GetMediaStream(string mediaPath)
     {
         var client = _httpClientFactory.CreateClient("UmbracoClient");
-
         var response = await client.GetAsync(mediaPath);
         response.EnsureSuccessStatusCode();
 
@@ -86,4 +83,14 @@ public class UmbracoService
 
         return (stream, contentType);
     }
+
+
+    
+
+    private string ResolveHostname(string brandSlug) => brandSlug switch
+    {
+        "uniphar-medtech" => $"unimedtech.localhost:{_umbracoPort}",
+        "uniphar-pharma"  => $"unipharma.localhost:{_umbracoPort}",
+        _                 => $"uniphargroup.localhost:{_umbracoPort}"
+    };
 }
