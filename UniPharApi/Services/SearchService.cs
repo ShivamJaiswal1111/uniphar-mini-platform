@@ -8,15 +8,18 @@ public class SearchService
     private readonly UmbracoService _umbracoService;
     private readonly BlogService _blogService;
     private readonly MigrationService _migrationService;
+    private readonly ILogger<SearchService> _logger;
 
     public SearchService(
         UmbracoService umbracoService,
         BlogService blogService,
-        MigrationService migrationService)
+        MigrationService migrationService,
+        ILogger<SearchService> logger)
     {
         _umbracoService = umbracoService;
         _blogService = blogService;
         _migrationService = migrationService;
+        _logger = logger;
     }
 
     public async Task<List<PageModel>> Search(string query, string culture = "en-US")
@@ -35,7 +38,8 @@ public class SearchService
         results.AddRange(blogResults.Where(p => MatchesPage(p, term)));
 
         // All page-type content across all brands
-        var contentTypes = new[] {
+        var contentTypes = new[]
+        {
             "standardPage",
             "servicePage",
             "investorOverviewPage",
@@ -50,32 +54,30 @@ public class SearchService
             try
             {
                 var rawJson = await _umbracoService.GetContentByType(contentType, culture);
-                Console.WriteLine($"[{contentType}] raw length: {rawJson.Length}");
-                if (contentType == "contactPage")
-                {
-                    Console.WriteLine($"[contactPage] FULL JSON: {rawJson}");
-                }
-
                 using var doc = JsonDocument.Parse(rawJson);
 
-                if (doc.RootElement.TryGetProperty("items", out var items) && items.ValueKind == JsonValueKind.Array)
+                if (doc.RootElement.TryGetProperty("items", out var items) &&
+                    items.ValueKind == JsonValueKind.Array)
                 {
+                    _logger.LogDebug("Search: {ContentType} returned {Count} items",
+                        contentType, items.GetArrayLength());
+
                     foreach (var item in items.EnumerateArray())
                     {
-                        var itemJson = item.GetRawText();
-                        var page = UmbracoMapper.MapToPage(itemJson, culture);
+                        var page = UmbracoMapper.MapToPage(item.GetRawText(), culture);
 
-                        // Pull extra searchable text this content type keeps outside PageModel
+                        // Extra searchable text this content type keeps outside PageModel
                         var extraText = ExtractExtraSearchText(item, contentType);
 
-                        if (MatchesPage(page, term) || (extraText?.ToLowerInvariant().Contains(term) ?? false))
+                        if (MatchesPage(page, term) ||
+                            (extraText?.ToLowerInvariant().Contains(term) ?? false))
                             results.Add(page);
                     }
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Search failed for {contentType}: {ex.Message}");
+                _logger.LogWarning(ex, "Search failed for content type {ContentType}", contentType);
             }
         }
 
@@ -99,9 +101,7 @@ public class SearchService
                 GetStr(props, "emailAddress")),
 
             "investorOverviewPage" => GetRte(props, "introduction"),
-
             "sustainabilityPage" => GetRte(props, "overviewText"),
-
             "resultsCentrePage" => GetRte(props, "resultsSummary"),
 
             _ => null
