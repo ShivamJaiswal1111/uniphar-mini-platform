@@ -4,7 +4,7 @@ namespace UniPharApi.Models;
 
 public static class UmbracoMapper
 {
-    private static readonly string UmbracoBaseUrl = "https://localhost:44335";
+    // private static readonly string UmbracoBaseUrl = "https://localhost:44335";
 
     public static string ResolveMediaUrls(string html)
     {
