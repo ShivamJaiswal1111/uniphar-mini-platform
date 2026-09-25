@@ -1,3 +1,5 @@
+using UniPharGroup.Swagger;
+
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 
@@ -11,6 +13,7 @@ builder.CreateUmbracoBuilder()
     .AddWebsite()
     .AddDeliveryApi()
     .AddComposers()
+    .ConfigureProductionSwaggerRoute()
     .Build();
 
 WebApplication app = builder.Build();
