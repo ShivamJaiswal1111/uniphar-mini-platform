@@ -14,6 +14,12 @@ export const routes: Routes = [
     pathMatch: 'full'
   },
   {
+    path: 'about-us',
+    loadComponent: () =>
+      import('./pages/standard-page/standard-page.component').then(m => m.StandardPageComponent),
+    pathMatch: 'full'
+  },
+  {
     path: 'sustainability',
     loadComponent: () =>
       import('./pages/sustainability/sustainability').then(m => m.Sustainability),
@@ -23,12 +29,6 @@ export const routes: Routes = [
     path: 'contact',
     loadComponent: () =>
       import('./pages/contact/contact.component').then(m => m.ContactComponent),
-    pathMatch: 'full'
-  },
-  {
-    path: 'about-us',
-    loadComponent: () =>
-      import('./pages/standard-page/standard-page.component').then(m => m.StandardPageComponent),
     pathMatch: 'full'
   },
   {
