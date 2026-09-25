@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Caching.Memory;
 using UniPharApi.Models;
 using UniPharApi.Services;
 
@@ -10,10 +9,10 @@ namespace UniPharApi.Controllers;
 public class InvestorController : ControllerBase
 {
     private readonly UmbracoService _umbracoService;
-    private readonly IMemoryCache _cache;
+    private readonly CacheService _cache;
     private readonly ILogger<InvestorController> _logger;
 
-    public InvestorController(UmbracoService umbracoService, IMemoryCache cache, ILogger<InvestorController> logger)
+    public InvestorController(UmbracoService umbracoService, CacheService cache, ILogger<InvestorController> logger)
     {
         _umbracoService = umbracoService;
         _cache = cache;
@@ -25,25 +24,25 @@ public class InvestorController : ControllerBase
     {
         var cacheKey = $"investors:overview:{culture}";
 
-        if (_cache.TryGetValue(cacheKey, out InvestorOverviewModel cached))
+        var cached = await _cache.GetAsync(cacheKey);
+        if (cached != null)
         {
             _logger.LogInformation("Cache hit: {Key}", cacheKey);
-            return Ok(cached);
+            return Ok(System.Text.Json.JsonSerializer.Deserialize<InvestorOverviewModel>(cached));
         }
 
         try
         {
             var rawJson = await _umbracoService.GetContentByPath("/investors/", "uniphar-group", culture);
             var overview = UmbracoMapper.MapToInvestorOverview(rawJson);
-            _cache.Set(cacheKey, overview, TimeSpan.FromMinutes(10));
+            await _cache.SetAsync(cacheKey, System.Text.Json.JsonSerializer.Serialize(overview));
             _logger.LogInformation("Cache set: {Key}", cacheKey);
             return Ok(overview);
         }
         catch (HttpRequestException ex) when (ex.Message.Contains("404"))
         {
             var rawJson = await _umbracoService.GetContentByPath("/investors/", "uniphar-group", "en-US");
-            var overview = UmbracoMapper.MapToInvestorOverview(rawJson);
-            return Ok(overview);
+            return Ok(UmbracoMapper.MapToInvestorOverview(rawJson));
         }
     }
 }
