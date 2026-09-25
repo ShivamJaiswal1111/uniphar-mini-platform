@@ -15,8 +15,11 @@ public class MigrationService
     public async Task<List<PageModel>> GetMigratedBlogPosts()
     {
         var client = _httpClientFactory.CreateClient("LegacyClient");
-        var response = await client.GetAsync(
+        var request = new HttpRequestMessage(HttpMethod.Get,
             "/umbraco/delivery/api/v2/content?fetch=children:/blog-posts/");
+        request.Headers.Add("Host", "uniphargroup.localhost"); // or whatever hostname the legacy instance expects
+
+        var response = await client.SendAsync(request);
 
         var json = await response.Content.ReadAsStringAsync();
         using var doc = JsonDocument.Parse(json);
@@ -33,9 +36,11 @@ public class MigrationService
     public async Task<PageModel?> GetMigratedBlogPost(string slug)
     {
         var client = _httpClientFactory.CreateClient("LegacyClient");
-        var response = await client.GetAsync(
+        var request = new HttpRequestMessage(HttpMethod.Get,
             $"/umbraco/delivery/api/v2/content/item/blog-posts/{slug}");
+        request.Headers.Add("Host", "uniphargroup.localhost"); // match the value above
 
+        var response = await client.SendAsync(request);
         if (!response.IsSuccessStatusCode) return null;
 
         var json = await response.Content.ReadAsStringAsync();
@@ -43,7 +48,6 @@ public class MigrationService
 
         return MapBlogPost(doc.RootElement);
     }
-
     private static PageModel MapBlogPost(JsonElement item)
     {
         var props = item.GetProperty("properties");
