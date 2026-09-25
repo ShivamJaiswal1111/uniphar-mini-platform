@@ -1,4 +1,6 @@
 using UniPharApi.Services;
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,20 +13,27 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngular", policy =>
     {
-        policy.WithOrigins("http://localhost:4200")   // Angular dev server, added later
+        policy.WithOrigins("http://localhost:4200")
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
 });
-builder.Services.AddHttpClient("UmbracoClient", client =>
+
+var umbracoClient = builder.Services.AddHttpClient("UmbracoClient", client =>
 {
     client.BaseAddress = new Uri(builder.Configuration["UmbracoApi:BaseUrl"]!);
     client.DefaultRequestHeaders.Add("Accept", "application/json");
-})
-.ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
-{
-    ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
 });
+
+// Accept Umbraco's self-signed dev certificate — development only
+if (builder.Environment.IsDevelopment())
+{
+    umbracoClient.ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+    {
+        ServerCertificateCustomValidationCallback =
+            HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+    });
+}
 
 builder.Services.AddHttpClient("LegacyClient", client =>
 {
@@ -32,11 +41,54 @@ builder.Services.AddHttpClient("LegacyClient", client =>
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
 
-builder.Services.AddMemoryCache();
-builder.Services.AddScoped<UniPharApi.Services.UmbracoService>();
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = builder.Configuration["Redis:ConnectionString"];
+    options.InstanceName = builder.Configuration["Redis:InstanceName"];
+});
+
+builder.Services.AddRateLimiter(options =>
+{
+    // Applies to every request automatically, in addition to any endpoint policy
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 100,
+                Window = TimeSpan.FromMinutes(1),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0
+            }));
+
+    // Stricter limit, applied only where [EnableRateLimiting("webhook")] is present
+    options.AddPolicy("webhook", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 3,
+                Window = TimeSpan.FromMinutes(1),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0
+            }));
+
+    options.OnRejected = async (context, cancellationToken) =>
+    {
+        context.HttpContext.Response.StatusCode = 429;
+        context.HttpContext.Response.ContentType = "application/json";
+        await context.HttpContext.Response.WriteAsync(
+            """{"error": "Too many requests. Please slow down and try again shortly."}""",
+            cancellationToken
+        );
+    };
+});
+builder.Services.AddScoped<UmbracoService>();
 builder.Services.AddScoped<MigrationService>();
 builder.Services.AddScoped<BlogService>();
 builder.Services.AddScoped<SearchService>();
+builder.Services.AddScoped<CacheService>();
+
 var app = builder.Build();
 
 // ---- PIPELINE ----
@@ -47,34 +99,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
-app.UseCors("AllowAngular");   // must come before MapControllers
-
+app.UseCors("AllowAngular");  
+app.UseRateLimiter();   
 app.MapControllers();
 
-// sample weather endpoint — we'll remove this once BrandController works
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast = Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
-
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
