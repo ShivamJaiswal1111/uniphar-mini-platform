@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Caching.Memory;
 using UniPharApi.Models;
 using UniPharApi.Services;
 
@@ -10,106 +9,59 @@ namespace UniPharApi.Controllers;
 public class PageController : ControllerBase
 {
     private readonly UmbracoService _umbracoService;
-    private readonly IMemoryCache _cache;
     private readonly ILogger<PageController> _logger;
 
-    public PageController(UmbracoService umbracoService, IMemoryCache cache, ILogger<PageController> logger)
+    public PageController(UmbracoService umbracoService, ILogger<PageController> logger)
     {
         _umbracoService = umbracoService;
-        _cache = cache;
         _logger = logger;
     }
 
     [HttpGet("page/{**slug}")]
     public async Task<IActionResult> GetPage(string brandSlug, string slug, [FromQuery] string culture = "en-US")
     {
-        var cacheKey = $"page:{brandSlug}:{slug}:{culture}";
-
-        if (_cache.TryGetValue(cacheKey, out PageModel cached))
-            return Ok(cached);
-
         try
         {
             var rawJson = await _umbracoService.GetContentByPath($"/{slug}", brandSlug, culture);
-            var page = UmbracoMapper.MapToPage(rawJson, culture);
-            _cache.Set(cacheKey, page, TimeSpan.FromMinutes(10));
-            return Ok(page);
+            return Ok(UmbracoMapper.MapToPage(rawJson, culture));
         }
         catch (HttpRequestException ex) when (ex.Message.Contains("404"))
         {
+            _logger.LogInformation("No {Culture} variant for /{Slug} on {Brand}, falling back to en-US", culture, slug, brandSlug);
             var rawJson = await _umbracoService.GetContentByPath($"/{slug}", brandSlug, "en-US");
-            var page = UmbracoMapper.MapToPage(rawJson, "en-US");
-            return Ok(page);
+            return Ok(UmbracoMapper.MapToPage(rawJson, "en-US"));
         }
     }
 
     [HttpGet("home")]
     public async Task<IActionResult> GetHome(string brandSlug, [FromQuery] string culture = "en-US")
     {
-        var cacheKey = $"page:{brandSlug}:home:{culture}";
-
-        if (_cache.TryGetValue(cacheKey, out PageModel cached))
-            return Ok(cached);
-
         try
         {
             var rawJson = await _umbracoService.GetContentByPath("/", brandSlug, culture);
-            var page = UmbracoMapper.MapToPage(rawJson, culture);
-            _cache.Set(cacheKey, page, TimeSpan.FromMinutes(10));
-            return Ok(page);
+            return Ok(UmbracoMapper.MapToPage(rawJson, culture));
         }
         catch (HttpRequestException ex) when (ex.Message.Contains("404"))
         {
-            // fallback to English
+            _logger.LogInformation("No {Culture} variant for home on {Brand}, falling back to en-US", culture, brandSlug);
             var rawJson = await _umbracoService.GetContentByPath("/", brandSlug, "en-US");
-            var page = UmbracoMapper.MapToPage(rawJson, "en-US");
-            return Ok(page);
+            return Ok(UmbracoMapper.MapToPage(rawJson, "en-US"));
         }
     }
 
     [HttpGet("contact")]
     public async Task<IActionResult> GetContact(string brandSlug, [FromQuery] string culture = "en-US")
     {
-        var cacheKey = $"contact:{brandSlug}:{culture}";
-
-        if (_cache.TryGetValue(cacheKey, out ContactModel cached))
-            return Ok(cached);
-
         try
         {
             var rawJson = await _umbracoService.GetContentByPath("/contact", brandSlug, culture);
-            var contact = UmbracoMapper.MapToContact(rawJson);
-            _cache.Set(cacheKey, contact, TimeSpan.FromMinutes(10));
-            return Ok(contact);
+            return Ok(UmbracoMapper.MapToContact(rawJson));
         }
         catch (HttpRequestException ex) when (ex.Message.Contains("404"))
         {
+            _logger.LogInformation("No {Culture} variant for contact on {Brand}, falling back to en-US", culture, brandSlug);
             var rawJson = await _umbracoService.GetContentByPath("/contact", brandSlug, "en-US");
-            var contact = UmbracoMapper.MapToContact(rawJson);
-            return Ok(contact);
+            return Ok(UmbracoMapper.MapToContact(rawJson));
         }
     }
-
-    // [HttpGet("sustainability")]
-    // public async Task<IActionResult> GetSustainability(string brandSlug, [FromQuery] string culture = "en-US")
-    // {
-    //     var cacheKey = $"sustainability:{brandSlug}:{culture}";
-
-    //     if (_cache.TryGetValue(cacheKey, out SustainabilityModel cached))
-    //         return Ok(cached);
-
-    //     try
-    //     {
-    //         var rawJson = await _umbracoService.GetContentByPath("/sustainability", brandSlug, culture);
-    //         var sustainability = UmbracoMapper.MapToSustainability(rawJson);
-    //         _cache.Set(cacheKey, sustainability, TimeSpan.FromMinutes(10));
-    //         return Ok(sustainability);
-    //     }
-    //     catch (HttpRequestException ex) when (ex.Message.Contains("404"))
-    //     {
-    //         var rawJson = await _umbracoService.GetContentByPath("/sustainability", brandSlug, "en-US");
-    //         var sustainability = UmbracoMapper.MapToSustainability(rawJson);
-    //         return Ok(sustainability);
-    //     }
-    // }
 }
