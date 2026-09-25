@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Caching.Memory;
+using Microsoft.AspNetCore.RateLimiting;
 using UniPharApi.Models;
+using UniPharApi.Services;
 
 namespace UniPharApi.Controllers;
 
@@ -8,17 +9,18 @@ namespace UniPharApi.Controllers;
 [Route("api/webhook")]
 public class WebhookController : ControllerBase
 {
-    private readonly IMemoryCache _cache;
+    private readonly CacheService _cache;
     private readonly ILogger<WebhookController> _logger;
 
-    public WebhookController(IMemoryCache cache, ILogger<WebhookController> logger)
+    public WebhookController(CacheService cache, ILogger<WebhookController> logger)
     {
         _cache = cache;
         _logger = logger;
     }
 
     [HttpPost("content-published")]
-    public IActionResult ContentPublished([FromBody] WebhookPayload payload)
+    [EnableRateLimiting("webhook")]
+    public async Task<IActionResult> ContentPublished([FromBody] WebhookPayload payload)
     {
         _logger.LogInformation(
             "Webhook received — Event: {EventName} | ContentType: {ContentType} | ContentId: {ContentId}",
@@ -27,13 +29,11 @@ public class WebhookController : ControllerBase
             payload.ContentId
         );
 
-        // Clear all cache by compacting 100% of it
-        if (_cache is MemoryCache memoryCache)
-        {
-            memoryCache.Compact(1.0);
-            _logger.LogInformation("Cache cleared after publish event");
-        }
+        // One write invalidates every cached page, brand and culture at once
+        var newVersion = await _cache.BumpVersionAsync();
 
-        return Ok(new { message = "Webhook received, cache cleared", contentId = payload.ContentId });
+        _logger.LogInformation("Content cache version bumped to {Version}", newVersion);
+
+        return Ok(new { message = "Cache invalidated", version = newVersion });
     }
 }
