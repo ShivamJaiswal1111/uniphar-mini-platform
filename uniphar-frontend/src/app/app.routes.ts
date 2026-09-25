@@ -1,30 +1,87 @@
 import { Routes } from '@angular/router';
-import { HomeComponent } from './pages/home/home.component';
-import { InvestorsComponent } from './pages/investors/investors.component';
-import { ServicesComponent } from './pages/services/services.component';
-import { ContactComponent } from './pages/contact/contact.component';
-import { ServiceDetailComponent } from './pages/service-detail/service-detail.component';
-import { StandardPageComponent } from './pages/standard-page/standard-page.component';
-import { Sustainability } from './pages/sustainability/sustainability';
-import { BlogListComponent } from './pages/blog-list/blog-list.component';
-import { BlogDetailComponent } from './pages/blog-detail/blog-detail.component';
-import { SearchResultsComponent } from './pages/search-results/search-results.component';
 
 export const routes: Routes = [
-  { path: '', component: HomeComponent, pathMatch: 'full' },
-  { path: 'investors', component: InvestorsComponent, pathMatch: 'full' },
-  { path: 'sustainability', component: Sustainability, pathMatch: 'full' },
-  { path: 'contact', component: ContactComponent, pathMatch: 'full' },
-  { path: 'about-us', component: StandardPageComponent, pathMatch: 'full' },
-  { path: 'blog', component: BlogListComponent, pathMatch: 'full' },
-  { path: 'search', component: SearchResultsComponent },
-  { path: 'blog/:slug', component: BlogDetailComponent },
-  { path: 'legacy/:pageSlug', component: StandardPageComponent, data: { brandSlug: 'legacy' } },
-  { path: ':brandSlug', component: HomeComponent },
-  { path: ':brandSlug/services', component: ServicesComponent },
-  { path: ':brandSlug/services/:serviceSlug', component: ServiceDetailComponent },
-  { path: ':brandSlug/contact', component: ContactComponent },
-  { path: ':brandSlug/sustainability', component: Sustainability },
-  { path: ':brandSlug/:pageSlug', component: StandardPageComponent },
+  {
+    path: '',
+    loadComponent: () =>
+      import('./pages/home/home.component').then(m => m.HomeComponent),
+    pathMatch: 'full'
+  },
+  {
+    path: 'investors',
+    loadComponent: () =>
+      import('./pages/investors/investors.component').then(m => m.InvestorsComponent),
+    pathMatch: 'full'
+  },
+  {
+    path: 'sustainability',
+    loadComponent: () =>
+      import('./pages/sustainability/sustainability').then(m => m.Sustainability),
+    pathMatch: 'full'
+  },
+  {
+    path: 'contact',
+    loadComponent: () =>
+      import('./pages/contact/contact.component').then(m => m.ContactComponent),
+    pathMatch: 'full'
+  },
+  {
+    path: 'about-us',
+    loadComponent: () =>
+      import('./pages/standard-page/standard-page.component').then(m => m.StandardPageComponent),
+    pathMatch: 'full'
+  },
+  {
+    path: 'blog',
+    loadComponent: () =>
+      import('./pages/blog-list/blog-list.component').then(m => m.BlogListComponent),
+    pathMatch: 'full'
+  },
+  {
+    path: 'search',
+    loadComponent: () =>
+      import('./pages/search-results/search-results.component').then(m => m.SearchResultsComponent)
+  },
+  {
+    path: 'blog/:slug',
+    loadComponent: () =>
+      import('./pages/blog-detail/blog-detail.component').then(m => m.BlogDetailComponent)
+  },
+  {
+    path: 'legacy/:pageSlug',
+    loadComponent: () =>
+      import('./pages/standard-page/standard-page.component').then(m => m.StandardPageComponent),
+    data: { brandSlug: 'legacy' }
+  },
+  {
+    path: ':brandSlug',
+    loadComponent: () =>
+      import('./pages/home/home.component').then(m => m.HomeComponent)
+  },
+  {
+    path: ':brandSlug/services',
+    loadComponent: () =>
+      import('./pages/services/services.component').then(m => m.ServicesComponent)
+  },
+  {
+    path: ':brandSlug/services/:serviceSlug',
+    loadComponent: () =>
+      import('./pages/service-detail/service-detail.component').then(m => m.ServiceDetailComponent)
+  },
+  {
+    path: ':brandSlug/contact',
+    loadComponent: () =>
+      import('./pages/contact/contact.component').then(m => m.ContactComponent)
+  },
+  {
+    path: ':brandSlug/sustainability',
+    loadComponent: () =>
+      import('./pages/sustainability/sustainability').then(m => m.Sustainability)
+  },
+  {
+    path: ':brandSlug/:pageSlug',
+    loadComponent: () =>
+      import('./pages/standard-page/standard-page.component').then(m => m.StandardPageComponent)
+  },
   { path: '**', redirectTo: '' }
 ];
