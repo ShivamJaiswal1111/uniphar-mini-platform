@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Caching.Memory;
 using UniPharApi.Models;
 using UniPharApi.Services;
 
@@ -10,10 +9,10 @@ namespace UniPharApi.Controllers;
 public class ServiceController : ControllerBase
 {
     private readonly UmbracoService _umbracoService;
-    private readonly IMemoryCache _cache;
+    private readonly CacheService _cache;
     private readonly ILogger<ServiceController> _logger;
 
-    public ServiceController(UmbracoService umbracoService, IMemoryCache cache, ILogger<ServiceController> logger)
+    public ServiceController(UmbracoService umbracoService, CacheService cache, ILogger<ServiceController> logger)
     {
         _umbracoService = umbracoService;
         _cache = cache;
@@ -25,16 +24,16 @@ public class ServiceController : ControllerBase
     {
         var cacheKey = $"services:{brandSlug}:{culture}";
 
-        if (_cache.TryGetValue(cacheKey, out List<ServiceModel> cached))
+        var cached = await _cache.GetAsync(cacheKey);
+        if (cached != null)
         {
             _logger.LogInformation("Cache hit: {Key}", cacheKey);
-            return Ok(cached);
+            return Ok(System.Text.Json.JsonSerializer.Deserialize<List<ServiceModel>>(cached));
         }
 
         var rawJson = await _umbracoService.GetContentByType("servicePage", culture);
         var services = UmbracoMapper.MapToServiceList(rawJson, brandSlug);
-
-        _cache.Set(cacheKey, services, TimeSpan.FromMinutes(10));
+        await _cache.SetAsync(cacheKey, System.Text.Json.JsonSerializer.Serialize(services));
         _logger.LogInformation("Cache set: {Key}", cacheKey);
 
         return Ok(services);
@@ -45,16 +44,16 @@ public class ServiceController : ControllerBase
     {
         var cacheKey = $"service:{brandSlug}:{serviceSlug}:{culture}";
 
-        if (_cache.TryGetValue(cacheKey, out ServiceModel cached))
+        var cached = await _cache.GetAsync(cacheKey);
+        if (cached != null)
         {
             _logger.LogInformation("Cache hit: {Key}", cacheKey);
-            return Ok(cached);
+            return Ok(System.Text.Json.JsonSerializer.Deserialize<ServiceModel>(cached));
         }
 
         var rawJson = await _umbracoService.GetContentByPath($"/{serviceSlug}", brandSlug, culture);
         var service = UmbracoMapper.MapToService(rawJson);
-
-        _cache.Set(cacheKey, service, TimeSpan.FromMinutes(10));
+        await _cache.SetAsync(cacheKey, System.Text.Json.JsonSerializer.Serialize(service));
         _logger.LogInformation("Cache set: {Key}", cacheKey);
 
         return Ok(service);
