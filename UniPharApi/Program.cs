@@ -6,8 +6,19 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.OpenApi.Models;
+using UniPharApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
+var publicBaseUrl = builder.Configuration["PublicApi:BaseUrl"];
+if (!string.IsNullOrWhiteSpace(publicBaseUrl))
+{
+    UmbracoMapper.MediaBaseUrl = publicBaseUrl;
+}
+else if (!builder.Environment.IsDevelopment())
+{
+    throw new InvalidOperationException(
+        "PublicApi:BaseUrl must be configured outside Development (e.g. https://api.yoursite.com).");
+}
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>

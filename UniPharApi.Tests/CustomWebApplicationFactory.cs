@@ -23,6 +23,7 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
         builder.UseSetting("Jwt:Audience", "test-audience");
         builder.UseSetting("Jwt:ExpiryMinutes", "60");
         builder.UseSetting("UmbracoApi:BaseUrl", "https://localhost:1");
+        builder.UseSetting("PublicApi:BaseUrl", "http://localhost:5220");
 
         builder.ConfigureServices(services =>
         {

@@ -5,6 +5,14 @@ namespace UniPharApi.Models;
 public static class UmbracoMapper
 {
     // private static readonly string UmbracoBaseUrl = "https://localhost:44335";
+    private static string _mediaBaseUrl = "http://localhost:5220";
+
+    // Public address of this API, used to build media URLs. Set once at startup from PublicApi:BaseUrl.
+    public static string MediaBaseUrl
+    {
+        get => _mediaBaseUrl;
+        set => _mediaBaseUrl = value.TrimEnd('/');
+    }
 
     public static string ResolveMediaUrls(string html)
     {
@@ -14,7 +22,7 @@ public static class UmbracoMapper
         return System.Text.RegularExpressions.Regex.Replace(
             html,
             @"src=""/media/([^""]*)""",
-            m => $"src=\"http://localhost:5220/api/media/{m.Groups[1].Value}\""
+            m => $"src=\"{MediaBaseUrl}/api/media/{m.Groups[1].Value}\""
         );
     }
     public static BrandModel MapToBrand(string rawJson, string requestedCulture)
@@ -363,7 +371,7 @@ public static class UmbracoMapper
         }
 
         // Absolute URL pointing at our own .NET API — matches Angular's environment.apiBaseUrl
-        return $"http://localhost:5220/api/media/{trimmed}";
+        return $"{MediaBaseUrl}/api/media/{trimmed}";
     }
 
     private static string? ExtractBrandSlug(JsonElement root)

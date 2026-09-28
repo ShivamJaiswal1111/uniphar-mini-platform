@@ -73,7 +73,7 @@ public class BlogService
                     if (trimmed.StartsWith("media/", StringComparison.OrdinalIgnoreCase))
                         trimmed = trimmed["media/".Length..];
 
-                    heroImageUrl = $"http://localhost:5220/api/media/{trimmed}";
+                    heroImageUrl = $"{UmbracoMapper.MediaBaseUrl}/api/media/{trimmed}";
                 }
             }
         }
