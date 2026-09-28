@@ -1,7 +1,10 @@
 using UniPharGroup.Swagger;
+using UniPharGroup.Notifications;
+using Umbraco.Cms.Core.Notifications;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddHttpClient();
 
 if (builder.Environment.IsProduction())
 {
@@ -13,6 +16,7 @@ builder.CreateUmbracoBuilder()
     .AddWebsite()
     .AddDeliveryApi()
     .AddComposers()
+    .AddNotificationHandler<ContentPublishedNotification, ContentPublishedWebhookHandler>()
     .ConfigureProductionSwaggerRoute()
     .Build();
 
