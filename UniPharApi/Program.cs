@@ -149,7 +149,7 @@ builder.Services.AddHealthChecks();
 builder.Services.AddScoped<UmbracoService>();
 builder.Services.AddScoped<BlogService>();
 builder.Services.AddScoped<SearchService>();
-builder.Services.AddScoped<CacheService>();
+builder.Services.AddSingleton<CacheService>();
 
 var app = builder.Build();
 

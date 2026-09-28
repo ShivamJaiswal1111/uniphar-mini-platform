@@ -5,13 +5,17 @@ namespace UniPharApi.Services;
 public class CacheService
 {
     private const string VersionKey = "content:version";
-
-    // Used as the content version while the cache is unreachable. Nothing can be
-    // read or written then anyway, so the exact value doesn't matter.
     private const string FallbackVersion = "cache-unavailable";
+
+    // After a cache failure, skip the cache entirely for this long.
+    private static readonly TimeSpan BreakerOpenFor = TimeSpan.FromSeconds(30);
 
     private readonly IDistributedCache _cache;
     private readonly ILogger<CacheService> _logger;
+
+    // UTC ticks until which the breaker is open (0 = closed).
+    // CacheService is a singleton, so this is shared by all requests.
+    private long _openUntilTicks;
 
     public CacheService(IDistributedCache cache, ILogger<CacheService> logger)
     {
@@ -19,23 +23,34 @@ public class CacheService
         _logger = logger;
     }
 
-    // Fail open: a cache error is treated as a cache miss.
+    private bool BreakerOpen =>
+        DateTime.UtcNow.Ticks < Interlocked.Read(ref _openUntilTicks);
+
+    private void TripBreaker(Exception ex, string what)
+    {
+        Interlocked.Exchange(ref _openUntilTicks, DateTime.UtcNow.Add(BreakerOpenFor).Ticks);
+        _logger.LogWarning(ex, "Cache {What} failed; skipping cache for {Seconds}s", what, BreakerOpenFor.TotalSeconds);
+    }
+
+    private void CloseBreaker() => Interlocked.Exchange(ref _openUntilTicks, 0);
+
     public async Task<string?> GetAsync(string key)
     {
+        if (BreakerOpen) return null;
         try
         {
             return await _cache.GetStringAsync(key);
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Cache read failed for {Key}; treating as miss", key);
+            TripBreaker(ex, "read");
             return null;
         }
     }
 
-    // Fail open: if the write fails, the response is still returned, just not cached.
     public async Task SetAsync(string key, string value, TimeSpan? expiry = null)
     {
+        if (BreakerOpen) return;
         try
         {
             var options = new DistributedCacheEntryOptions
@@ -46,28 +61,26 @@ public class CacheService
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Cache write failed for {Key}; continuing without caching", key);
+            TripBreaker(ex, "write");
         }
     }
 
     public async Task RemoveAsync(string key)
     {
+        if (BreakerOpen) return;
         try
         {
             await _cache.RemoveAsync(key);
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Cache remove failed for {Key}", key);
+            TripBreaker(ex, "remove");
         }
     }
 
-    // Current content version. If the version key is missing (first run, Redis flushed,
-    // or it expired), create a fresh one. A new version can only cause cache misses,
-    // never stale reads, so this is always safe. If the cache is down, return a fixed
-    // fallback so content requests still go through to Umbraco.
     public async Task<string> GetVersionAsync()
     {
+        if (BreakerOpen) return FallbackVersion;
         try
         {
             var version = await _cache.GetStringAsync(VersionKey);
@@ -78,14 +91,13 @@ public class CacheService
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Cache version lookup failed; using fallback version");
+            TripBreaker(ex, "version lookup");
             return FallbackVersion;
         }
     }
 
-    // Called by the webhook: every existing content key becomes unreachable at once.
-    // Deliberately strict (no try/catch): if the bump fails, the webhook must report
-    // failure so a stale cache doesn't go unnoticed.
+    // Deliberately strict and never skipped by the breaker: the webhook must try
+    // Redis and report failure if the bump doesn't happen. A success closes the breaker.
     public async Task<string> BumpVersionAsync()
     {
         var version = DateTime.UtcNow.Ticks.ToString();
@@ -93,6 +105,7 @@ public class CacheService
         {
             AbsoluteExpirationRelativeToNow = TimeSpan.FromDays(7)
         });
+        CloseBreaker();
         return version;
     }
 }
