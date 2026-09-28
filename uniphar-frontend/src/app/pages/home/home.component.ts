@@ -50,18 +50,19 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.loading = true;
     this.error = null;
     this.pageService.getHome(this.brandSlug, this.currentCulture).subscribe({
-      next: data => {
+      next: (data: Page) => {
         this.page = data;
         this.loading = false;
         this.cdr.detectChanges();
       },
-      error: err => {
-        this.error = 'Failed to load page content.';
+      error: (err: unknown) => {
+        this.error = 'Failed to load page';
         this.loading = false;
         this.cdr.detectChanges();
         console.error(err);
       }
     });
+    
   }
 
   getCardLink(linkUrl: string | null): string {

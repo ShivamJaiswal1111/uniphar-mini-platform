@@ -7,24 +7,23 @@ import { Page } from '../models/page.model';
 export class PageService {
   constructor(private api: ApiService) {}
 
-  getPage(brandSlug: string, pageSlug: string, culture: string = 'en-US'): Observable<Page> {
-    return this.api.get<Page>(`${brandSlug}/page/${pageSlug}`, culture);
-  }
-
   getHome(brandSlug: string, culture: string = 'en-US'): Observable<Page> {
     return this.api.get<Page>(`${brandSlug}/home`, culture);
   }
 
-  getLegacyPage(slug: string): Observable<Page> {
-    return this.api.get<Page>(`legacy/${slug}`);
+  getPage(brandSlug: string, pageSlug: string, culture: string = 'en-US'): Observable<Page> {
+    return this.api.get<Page>(`${brandSlug}/page/${pageSlug}`, culture);
   }
+
+  getLegacyPage(pageSlug: string): Observable<Page> {
+    return this.api.get<Page>(`legacy/${pageSlug}`);
+  }
+
   getBlogPosts(): Observable<Page[]> {
     return this.api.get<Page[]>('blog');
   }
 
-  getBlogPost(slug: string, source: string = 'new'): Observable<Page> {
-    return this.api.get<Page>(`blog/${slug}`, 'en-US', { source });
+  getBlogPost(slug: string, culture: string = 'en-US'): Observable<Page> {
+    return this.api.get<Page>(`blog/${slug}`, culture);
   }
-
-  
 }

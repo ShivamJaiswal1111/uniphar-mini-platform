@@ -8,6 +8,6 @@ export class SearchService {
   constructor(private api: ApiService) {}
 
   search(query: string, culture: string = 'en-US'): Observable<Page[]> {
-    return this.api.get<Page[]>('search', culture, { q: query });
+    return this.api.get<Page[]>(`search?q=${encodeURIComponent(query)}`, culture);
   }
 }

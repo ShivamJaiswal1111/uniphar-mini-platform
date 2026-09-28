@@ -26,22 +26,21 @@ export class BlogDetailComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    const slug = this.route.snapshot.paramMap.get('slug') || '';
-    const source = this.route.snapshot.queryParamMap.get('source') || 'new';
+  const slug = this.route.snapshot.paramMap.get('slug') || '';
 
-    this.pageService.getBlogPost(slug, source).subscribe({
-      next: (data) => {
-        this.post = data;
-        this.loading = false;
-        this.cdr.detectChanges();
-      },
-      error: (err) => {
-        this.error = 'Failed to load post';
-        this.loading = false;
-        this.cdr.detectChanges();
-        console.error(err);
-      }
-    });
-  }
+  this.pageService.getBlogPost(slug).subscribe({
+    next: (data) => {
+      this.post = data;
+      this.loading = false;
+      this.cdr.detectChanges();
+    },
+    error: (err) => {
+      this.error = 'Failed to load post';
+      this.loading = false;
+      this.cdr.detectChanges();
+      console.error(err);
+    }
+  });
+}
   
 }
