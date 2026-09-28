@@ -50,5 +50,8 @@
       <option *ngFor="let lang of languages" [value]="lang.code">{{ lang.label }}</option>
     </select>
 
+    <a *ngIf="!authService.isLoggedIn()" routerLink="/login" style="color: white; text-decoration: none;">Login</a>
+    <button *ngIf="authService.isLoggedIn()" (click)="logout()" style="background: none; border: none; color: white; cursor: pointer;">Logout</button>
+
   </div>
 </nav>

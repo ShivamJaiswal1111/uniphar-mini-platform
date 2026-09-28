@@ -1,0 +1,38 @@
+<app-navbar></app-navbar>
+
+<section style="min-height: 60vh; display: flex; align-items: center; justify-content: center; padding: 60px 32px;">
+  <form (ngSubmit)="onSubmit()" style="background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); width: 100%; max-width: 360px;">
+    <h1 style="font-size: 24px; font-weight: 600; color: #1b264f; margin: 0 0 24px;">Admin Login</h1>
+
+    <div style="margin-bottom: 16px;">
+      <label style="display: block; font-size: 14px; color: #444; margin-bottom: 6px;">Username</label>
+      <input
+        type="text"
+        name="username"
+        [(ngModel)]="username"
+        required
+        style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;" />
+    </div>
+
+    <div style="margin-bottom: 24px;">
+      <label style="display: block; font-size: 14px; color: #444; margin-bottom: 6px;">Password</label>
+      <input
+        type="password"
+        name="password"
+        [(ngModel)]="password"
+        required
+        style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;" />
+    </div>
+
+    <div *ngIf="error" style="color: #c00; font-size: 13px; margin-bottom: 16px;">
+      {{ error }}
+    </div>
+
+    <button
+      type="submit"
+      [disabled]="loading"
+      style="width: 100%; background: #1b264f; color: white; padding: 12px; border: none; border-radius: 4px; font-weight: 500; cursor: pointer;">
+      {{ loading ? 'Signing in...' : 'Sign In' }}
+    </button>
+  </form>
+</section>

@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { authGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
   {
@@ -23,6 +24,7 @@ export const routes: Routes = [
     path: 'sustainability',
     loadComponent: () =>
       import('./pages/sustainability/sustainability').then(m => m.Sustainability),
+    canActivate: [authGuard],
     pathMatch: 'full'
   },
   {
@@ -52,6 +54,13 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/standard-page/standard-page.component').then(m => m.StandardPageComponent),
     data: { brandSlug: 'legacy' }
+  },
+  
+  {
+  path: 'login',
+    loadComponent: () =>
+      import('./pages/login/login').then(m => m.Login),
+    pathMatch: 'full'
   },
   {
     path: ':brandSlug',

@@ -4,6 +4,8 @@ import { CommonModule } from '@angular/common';
 import { filter } from 'rxjs';
 import { LanguageService } from '../../services/language.service';
 import { FormsModule } from '@angular/forms';
+import { AuthService } from '../../services/auth.service';
+
 
 
 @Component({
@@ -27,8 +29,15 @@ export class NavbarComponent implements OnInit {
 
   constructor(
     private languageService: LanguageService,
-    private router: Router
+    private router: Router,
+    public authService: AuthService 
   ) {}
+
+
+logout(): void {
+  this.authService.logout();
+  this.router.navigate(['/']);
+}
 
   ngOnInit(): void {
     this.languageService.currentLanguage$.subscribe(lang => {
