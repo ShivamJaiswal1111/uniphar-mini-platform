@@ -27,3 +27,9 @@ uniphar-frontend/.angular/
 .DS_Store
 Thumbs.db
 .angular/
+
+UniPharApi/appsettings.json
+UniPharGroup/appsettings.json
+
+UniPharApi/appsettings.json
+UniPharGroup/appsettings.json
