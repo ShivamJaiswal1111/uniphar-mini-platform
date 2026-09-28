@@ -153,6 +153,37 @@ builder.Services.AddScoped<CacheService>();
 
 var app = builder.Build();
 
+app.Use(async (context, next) =>
+{
+    try
+    {
+        await next();
+    }
+    catch (HttpRequestException ex) when (!context.Response.HasStarted)
+    {
+        var logger = context.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger("UpstreamErrors");
+        var notFound = ex.StatusCode == System.Net.HttpStatusCode.NotFound;
+
+        logger.LogWarning("Umbraco call failed ({Status}): {Message}", ex.StatusCode?.ToString() ?? "unreachable", ex.Message);
+
+        context.Response.StatusCode = notFound ? StatusCodes.Status404NotFound : StatusCodes.Status502BadGateway;
+        await context.Response.WriteAsJsonAsync(new
+        {
+            error = notFound ? "Content not found" : "Content service is unavailable. Please try again shortly."
+        });
+    }
+    catch (TaskCanceledException ex) when (ex.InnerException is TimeoutException
+                                           && !context.RequestAborted.IsCancellationRequested
+                                           && !context.Response.HasStarted)
+    {
+        var logger = context.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger("UpstreamErrors");
+        logger.LogWarning("Umbraco call timed out: {Message}", ex.Message);
+
+        context.Response.StatusCode = StatusCodes.Status504GatewayTimeout;
+        await context.Response.WriteAsJsonAsync(new { error = "Content service timed out. Please try again shortly." });
+    }
+});
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
