@@ -7,18 +7,15 @@ public class SearchService
 {
     private readonly UmbracoService _umbracoService;
     private readonly BlogService _blogService;
-    private readonly MigrationService _migrationService;
     private readonly ILogger<SearchService> _logger;
 
     public SearchService(
         UmbracoService umbracoService,
         BlogService blogService,
-        MigrationService migrationService,
         ILogger<SearchService> logger)
     {
         _umbracoService = umbracoService;
         _blogService = blogService;
-        _migrationService = migrationService;
         _logger = logger;
     }
 
@@ -30,12 +27,9 @@ public class SearchService
         var term = query.Trim().ToLowerInvariant();
         var results = new List<PageModel>();
 
-        // Blog posts (new + migrated)
-        var blogResults = new List<PageModel>();
-        blogResults.AddRange(await _blogService.GetNewBlogPosts());
-        blogResults.AddRange(await _migrationService.GetMigratedBlogPosts());
-
-        results.AddRange(blogResults.Where(p => MatchesPage(p, term)));
+        // Blog posts — new Umbraco v17 posts only
+        var blogPosts = await _blogService.GetNewBlogPosts();
+        results.AddRange(blogPosts.Where(p => MatchesPage(p, term)));
 
         // All page-type content across all brands
         var contentTypes = new[]
@@ -65,8 +59,6 @@ public class SearchService
                     foreach (var item in items.EnumerateArray())
                     {
                         var page = UmbracoMapper.MapToPage(item.GetRawText(), culture);
-
-                        // Extra searchable text this content type keeps outside PageModel
                         var extraText = ExtractExtraSearchText(item, contentType);
 
                         if (MatchesPage(page, term) ||
@@ -101,17 +93,19 @@ public class SearchService
                 GetStr(props, "emailAddress")),
 
             "investorOverviewPage" => GetRte(props, "introduction"),
-            "sustainabilityPage" => GetRte(props, "overviewText"),
-            "resultsCentrePage" => GetRte(props, "resultsSummary"),
+            "sustainabilityPage"   => GetRte(props, "overviewText"),
+            "resultsCentrePage"    => GetRte(props, "resultsSummary"),
 
             _ => null
         };
     }
 
     private static string? GetStr(JsonElement props, string name) =>
-        props.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString() : null;
+        props.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.String
+            ? v.GetString() : null;
 
     private static string? GetRte(JsonElement props, string name) =>
         props.TryGetProperty(name, out var rte) && rte.ValueKind == JsonValueKind.Object &&
-        rte.TryGetProperty("markup", out var markup) ? markup.GetString() : null;
+        rte.TryGetProperty("markup", out var markup)
+            ? markup.GetString() : null;
 }

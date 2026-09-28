@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using UniPharApi.Services;
-using UniPharApi.Models;
 using System.Text.Json;
 
 namespace UniPharApi.Controllers;
@@ -9,23 +8,26 @@ namespace UniPharApi.Controllers;
 [Route("api/blog")]
 public class BlogController : ControllerBase
 {
-    private readonly MigrationService _migrationService;
     private readonly BlogService _blogService;
     private readonly CacheService _cache;
 
-    public BlogController(MigrationService migrationService, BlogService blogService, CacheService cache)
+    private static readonly JsonSerializerOptions JsonOptions = new()
     {
-        _migrationService = migrationService;
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
+
+    public BlogController(BlogService blogService, CacheService cache)
+    {
         _blogService = blogService;
         _cache = cache;
     }
 
-    // GET /api/blog — merged list, new posts first then migrated
+    // GET /api/blog
     [HttpGet]
     public async Task<IActionResult> GetAllPosts()
     {
         var version = await _cache.GetVersionAsync();
-        var cacheKey = $"content:{version}:blog:merged";
+        var cacheKey = $"content:{version}:blog:all";
 
         var cached = await _cache.GetAsync(cacheKey);
         if (cached != null)
@@ -34,37 +36,22 @@ public class BlogController : ControllerBase
             return Content(cached, "application/json");
         }
 
-        Console.WriteLine($"[CACHE MISS] {cacheKey} — merging blog sources");
+        Console.WriteLine($"[CACHE MISS] {cacheKey}");
 
-        var newPosts = await _blogService.GetNewBlogPosts();
-        var migratedPosts = await _migrationService.GetMigratedBlogPosts();
-
-        newPosts.ForEach(p => p.ContentType = "blogPost");
-        migratedPosts.ForEach(p => p.ContentType = "migratedBlogPost");
-
-        var merged = newPosts.Concat(migratedPosts).ToList();
-        var json = JsonSerializer.Serialize(merged);
+        var posts = await _blogService.GetNewBlogPosts();
+        var json = JsonSerializer.Serialize(posts, JsonOptions);
 
         await _cache.SetAsync(cacheKey, json, TimeSpan.FromMinutes(10));
 
         return Content(json, "application/json");
     }
 
-    // GET /api/blog/{slug}?source=new|migrated  — unchanged, not cached
+    // GET /api/blog/{slug}
     [HttpGet("{slug}")]
-    public async Task<IActionResult> GetPost(string slug, [FromQuery] string source = "new")
+    public async Task<IActionResult> GetPost(string slug)
     {
-        if (source == "migrated")
-        {
-            var migrated = await _migrationService.GetMigratedBlogPost(slug);
-            if (migrated == null) return NotFound();
-            return Ok(migrated);
-        }
-        else
-        {
-            var post = await _blogService.GetNewBlogPost(slug);
-            if (post == null) return NotFound();
-            return Ok(post);
-        }
+        var post = await _blogService.GetNewBlogPost(slug);
+        if (post == null) return NotFound();
+        return Ok(post);
     }
 }
