@@ -8,9 +8,10 @@ namespace UniPharApi.Tests;
 public class CustomWebApplicationFactory : WebApplicationFactory<Program>
 {
     public const string TestApiKey = "test-api-key";
-    
     public const string TestUsername = "test-admin";
     public const string TestPassword = "test-password";
+
+    public FakeUmbracoHandler Umbraco { get; } = new();
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -25,15 +26,17 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
 
         builder.ConfigureServices(services =>
         {
-            // Remove the Redis-backed IDistributedCache registered in Program.cs
             var redis = services
                 .Where(d => d.ServiceType == typeof(IDistributedCache))
                 .ToList();
             foreach (var descriptor in redis)
                 services.Remove(descriptor);
 
-            // Real IDistributedCache, but stored in process memory
             services.AddDistributedMemoryCache();
+
+            // Route every call from the "UmbracoClient" named client to the fake
+            services.AddHttpClient("UmbracoClient")
+                .ConfigurePrimaryHttpMessageHandler(() => Umbraco);
         });
     }
 }
