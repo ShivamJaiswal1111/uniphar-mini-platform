@@ -1,21 +1,80 @@
 using UniPharApi.Services;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.RateLimiting;
+using System.Text.Json;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ---- SERVICES ----
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+    });
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo { Title = "UniPharApi", Version = "v1" });
+
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "Bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Enter your token below (no need to type \"Bearer \" — Swagger adds it automatically)"
+    });
+
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] {}
+        }
+    });
+});
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidateAudience = true,
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
+        };
+    });
+
+builder.Services.AddAuthorization();
+
+var allowedOrigins = builder.Configuration
+    .GetSection("Cors:AllowedOrigins")
+    .Get<string[]>() ?? Array.Empty<string>();
 
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngular", policy =>
     {
-        policy.WithOrigins("http://localhost:4200")
-              .AllowAnyHeader()
-              .AllowAnyMethod();
+        policy.WithOrigins(allowedOrigins)
+              .WithHeaders("Content-Type", "Authorization", "Accept-Language")
+              .WithMethods("GET", "POST");
     });
 });
 
@@ -25,7 +84,6 @@ var umbracoClient = builder.Services.AddHttpClient("UmbracoClient", client =>
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
 
-// Accept Umbraco's self-signed dev certificate — development only
 if (builder.Environment.IsDevelopment())
 {
     umbracoClient.ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
@@ -35,12 +93,6 @@ if (builder.Environment.IsDevelopment())
     });
 }
 
-builder.Services.AddHttpClient("LegacyClient", client =>
-{
-    client.BaseAddress = new Uri("http://localhost:2271");
-    client.DefaultRequestHeaders.Add("Accept", "application/json");
-});
-
 builder.Services.AddStackExchangeRedisCache(options =>
 {
     options.Configuration = builder.Configuration["Redis:ConnectionString"];
@@ -49,7 +101,6 @@ builder.Services.AddStackExchangeRedisCache(options =>
 
 builder.Services.AddRateLimiter(options =>
 {
-    // Applies to every request automatically, in addition to any endpoint policy
     options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
         RateLimitPartition.GetFixedWindowLimiter(
             partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
@@ -61,7 +112,6 @@ builder.Services.AddRateLimiter(options =>
                 QueueLimit = 0
             }));
 
-    // Stricter limit, applied only where [EnableRateLimiting("webhook")] is present
     options.AddPolicy("webhook", context =>
         RateLimitPartition.GetFixedWindowLimiter(
             partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
@@ -83,15 +133,15 @@ builder.Services.AddRateLimiter(options =>
         );
     };
 });
+builder.Services.AddHealthChecks();
+
 builder.Services.AddScoped<UmbracoService>();
-builder.Services.AddScoped<MigrationService>();
 builder.Services.AddScoped<BlogService>();
 builder.Services.AddScoped<SearchService>();
 builder.Services.AddScoped<CacheService>();
 
 var app = builder.Build();
 
-// ---- PIPELINE ----
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -99,8 +149,12 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseCors("AllowAngular");  
-app.UseRateLimiter();   
+app.UseCors("AllowAngular");
+app.UseAuthentication();
+app.UseAuthorization();
+app.UseRateLimiter();
 app.MapControllers();
+app.MapHealthChecks("/health");
 
 app.Run();
+
