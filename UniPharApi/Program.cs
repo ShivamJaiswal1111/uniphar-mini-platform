@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.OpenApi.Models;
 using UniPharApi.Models;
+using Microsoft.AspNetCore.HttpOverrides;
 
 var builder = WebApplication.CreateBuilder(args);
 var publicBaseUrl = builder.Configuration["PublicApi:BaseUrl"];
@@ -151,7 +152,21 @@ builder.Services.AddScoped<BlogService>();
 builder.Services.AddScoped<SearchService>();
 builder.Services.AddSingleton<CacheService>();
 
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+
+    // Only trust forwarded headers from these proxies (plus loopback, the default).
+    // Production: set ForwardedHeaders__KnownProxies__0 to the reverse proxy's IP.
+    var proxies = builder.Configuration.GetSection("ForwardedHeaders:KnownProxies").Get<string[]>()
+                  ?? Array.Empty<string>();
+    foreach (var proxy in proxies)
+        options.KnownProxies.Add(System.Net.IPAddress.Parse(proxy));
+});
+
 var app = builder.Build();
+
+app.UseForwardedHeaders();
 
 app.Use(async (context, next) =>
 {
