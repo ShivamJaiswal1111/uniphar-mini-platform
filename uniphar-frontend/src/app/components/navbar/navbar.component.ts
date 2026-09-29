@@ -2,11 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { RouterLink, Router, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { filter } from 'rxjs';
-import { LanguageService } from '../../services/language.service';
+import { LanguageService, LanguageOption } from '../../services/language.service';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
-
-
 
 @Component({
   selector: 'app-navbar',
@@ -21,37 +19,43 @@ export class NavbarComponent implements OnInit {
   showPharma = false;
   searchQuery: string = '';
 
-  languages = [
-    { code: 'en-US', label: 'English' },
-    { code: 'fr-FR', label: 'French' },
-    { code: 'de-DE', label: 'German' }
-  ];
+  // Filled per brand from LanguageService, replaces the old hardcoded list.
+  availableLanguages: LanguageOption[] = [];
 
   constructor(
     private languageService: LanguageService,
     private router: Router,
-    public authService: AuthService 
+    public authService: AuthService
   ) {}
 
-
-logout(): void {
-  this.authService.logout();
-  this.router.navigate(['/']);
-}
+  logout(): void {
+    this.authService.logout();
+    this.router.navigate(['/']);
+  }
 
   ngOnInit(): void {
     this.languageService.currentLanguage$.subscribe(lang => {
       this.currentLanguage = lang;
     });
 
+    // Run once now (the navigation may already have finished before this
+    // component was created), then again after every navigation.
+    this.updateBrand(this.router.url);
+
     this.router.events.pipe(
       filter(e => e instanceof NavigationEnd)
     ).subscribe((e: any) => {
-      const url: string = e.urlAfterRedirects;
-      if (url.includes('uniphar-medtech')) this.activeBrand = 'uniphar-medtech';
-      else if (url.includes('uniphar-pharma')) this.activeBrand = 'uniphar-pharma';
-      else this.activeBrand = 'uniphar-group';
+      this.updateBrand(e.urlAfterRedirects);
     });
+  }
+
+  private updateBrand(url: string): void {
+    if (url.includes('uniphar-medtech')) this.activeBrand = 'uniphar-medtech';
+    else if (url.includes('uniphar-pharma')) this.activeBrand = 'uniphar-pharma';
+    else this.activeBrand = 'uniphar-group';
+
+    this.availableLanguages = this.languageService.getLanguagesFor(this.activeBrand);
+    this.languageService.ensureValidFor(this.activeBrand);
   }
 
   switchLanguage(event: Event): void {
