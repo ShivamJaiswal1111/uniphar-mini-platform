@@ -75,7 +75,7 @@ public class UmbracoProxyTests : IClassFixture<CustomWebApplicationFactory>
         Assert.All(requests, r =>
         {
             Assert.Equal("/umbraco/delivery/api/v2/content/item/services/cardiac", r.PathAndQuery);
-            Assert.Equal("unimedtech.localhost:1", r.Host);
+            Assert.Equal("unimedtech.localhost:44335", r.Host);
         });
     }
 }

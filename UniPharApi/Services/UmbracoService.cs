@@ -1,17 +1,22 @@
 namespace UniPharApi.Services;
+using System.Text.Json.Nodes;
 
 public class UmbracoService
 {
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly CacheService _cache;
-    private readonly string _umbracoPort;
+    private readonly Dictionary<string, string> _brandHosts;
 
     public UmbracoService(IHttpClientFactory httpClientFactory, CacheService cache, IConfiguration config)
     {
         _httpClientFactory = httpClientFactory;
         _cache = cache;
-        var baseUrl = config["UmbracoApi:BaseUrl"]!;
-        _umbracoPort = new Uri(baseUrl).Port.ToString();
+        _brandHosts = new Dictionary<string, string>(
+            config.GetSection("UmbracoApi:BrandHosts").Get<Dictionary<string, string>>() ?? new(),
+            StringComparer.OrdinalIgnoreCase);
+
+        if (_brandHosts.Count == 0)
+            throw new InvalidOperationException("UmbracoApi:BrandHosts is missing or empty in configuration.");
     }
 
     public async Task<string> GetContentByPath(string domainRelativePath, string brandSlug, string culture = "en-US")
@@ -87,10 +92,14 @@ public class UmbracoService
 
     
 
-    private string ResolveHostname(string brandSlug) => brandSlug switch
+    private string ResolveHostname(string brandSlug)
     {
-        "uniphar-medtech" => $"unimedtech.localhost:{_umbracoPort}",
-        "uniphar-pharma"  => $"unipharma.localhost:{_umbracoPort}",
-        _                 => $"uniphargroup.localhost:{_umbracoPort}"
-    };
+        if (_brandHosts.TryGetValue(brandSlug, out var host))
+            return host;
+
+        throw new HttpRequestException(
+            $"No hostname configured for brand '{brandSlug}'.",
+            null,
+            System.Net.HttpStatusCode.NotFound);
+    }
 }

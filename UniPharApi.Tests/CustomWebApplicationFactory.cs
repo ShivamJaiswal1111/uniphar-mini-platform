@@ -24,6 +24,9 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
         builder.UseSetting("Jwt:ExpiryMinutes", "60");
         builder.UseSetting("UmbracoApi:BaseUrl", "https://localhost:1");
         builder.UseSetting("PublicApi:BaseUrl", "http://localhost:5220");
+        builder.UseSetting("UmbracoApi:BrandHosts:uniphar-group", "uniphargroup.localhost:44335");
+        builder.UseSetting("UmbracoApi:BrandHosts:uniphar-medtech", "unimedtech.localhost:44335");
+        builder.UseSetting("UmbracoApi:BrandHosts:uniphar-pharma", "unipharma.localhost:44335");
 
         builder.ConfigureServices(services =>
         {
