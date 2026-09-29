@@ -76,6 +76,70 @@ public class UmbracoService
         return content;
     }
 
+    /// <summary>
+    /// Umbraco's list query does not apply language fallback, so items with no
+    /// translation vanish. This returns every item from the fallback culture,
+    /// replaced by the translated version where one exists (matched by id).
+    /// </summary>
+    public async Task<string> GetContentByTypeWithFallback(
+        string contentType, string culture, string fallbackCulture = "en-US")
+    {
+        var requested = await GetContentByType(contentType, culture);
+
+        if (string.Equals(culture, fallbackCulture, StringComparison.OrdinalIgnoreCase))
+            return requested;
+
+        var fallback = await GetContentByType(contentType, fallbackCulture);
+        return MergeItemsById(requested, fallback);
+    }
+
+    private static string MergeItemsById(string requestedJson, string fallbackJson)
+    {
+        var requestedItems = JsonNode.Parse(requestedJson)?["items"]?.AsArray() ?? new JsonArray();
+        var fallbackItems = JsonNode.Parse(fallbackJson)?["items"]?.AsArray() ?? new JsonArray();
+
+        // Translated items, keyed by id.
+        var translated = new Dictionary<string, JsonNode>(StringComparer.OrdinalIgnoreCase);
+        foreach (var item in requestedItems)
+        {
+            var id = (string?)item?["id"];
+            if (id != null && item != null) translated[id] = item;
+        }
+
+        var merged = new JsonArray();
+        var used = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        // Walk the fallback (English) list: prefer the translated version.
+        foreach (var item in fallbackItems)
+        {
+            if (item == null) continue;
+            var id = (string?)item["id"];
+
+            if (id != null && translated.TryGetValue(id, out var better))
+            {
+                merged.Add(better.DeepClone());
+                used.Add(id);
+            }
+            else
+            {
+                merged.Add(item.DeepClone());
+            }
+        }
+
+        // Translated items with no English counterpart still get included.
+        foreach (var (id, item) in translated)
+        {
+            if (!used.Contains(id)) merged.Add(item.DeepClone());
+        }
+
+        var result = new JsonObject
+        {
+            ["total"] = merged.Count,
+            ["items"] = merged
+        };
+        return result.ToJsonString();
+    }
+
     // Media is not cached — streams are one-shot and binary, not worth storing in Redis
     public async Task<(Stream stream, string contentType)> GetMediaStream(string mediaPath)
     {
