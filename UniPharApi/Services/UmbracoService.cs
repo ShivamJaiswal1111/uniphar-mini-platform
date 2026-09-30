@@ -71,7 +71,13 @@ public class UmbracoService
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadAsStringAsync();
-        await _cache.SetAsync(cacheKey, content, TimeSpan.FromMinutes(10));
+
+        // Don't cache empty lists: a missing translation or a transient blip
+        // would otherwise be served until the cache version bumps or the entry expires.
+        if (HasItems(content))
+            await _cache.SetAsync(cacheKey, content, TimeSpan.FromMinutes(10));
+        else
+            Console.WriteLine($"[CACHE SKIP] {cacheKey} — empty or unparseable list");
 
         return content;
     }
@@ -93,6 +99,18 @@ public class UmbracoService
         return MergeItemsById(requested, fallback);
     }
 
+    private static bool HasItems(string json)
+    {
+        try
+        {
+            var items = JsonNode.Parse(json)?["items"]?.AsArray();
+            return items is { Count: > 0 };
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            return false;
+        }
+    }
     private static string MergeItemsById(string requestedJson, string fallbackJson)
     {
         var requestedItems = JsonNode.Parse(requestedJson)?["items"]?.AsArray() ?? new JsonArray();
