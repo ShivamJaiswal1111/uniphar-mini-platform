@@ -4,7 +4,7 @@ public class SustainabilityModel
 {
     public string HeroHeading { get; set; } = string.Empty;
     public string HeroSubtext { get; set; } = string.Empty;
-    public string? HeroImageUrl { get; set; }   // ← add this line
+    public string? HeroImageUrl { get; set; }   
     public string OverviewText { get; set; } = string.Empty;
     public List<GoalModel> Goals { get; set; } = new();
     public string? EsgReportUrl { get; set; }
