@@ -1,15 +1,26 @@
 using System.Text.Json;
 using UniPharApi.Models;
+using System.Net;
 
 namespace UniPharApi.Services;
 
 public class BlogService
 {
     private readonly IHttpClientFactory _httpClientFactory;
+    private readonly IConfiguration _config;
 
-    public BlogService(IHttpClientFactory factory)
+    public BlogService(IHttpClientFactory factory, IConfiguration config)
     {
         _httpClientFactory = factory;
+        _config = config;
+    }
+
+    private string GroupHost()
+    {
+        var host = _config["UmbracoApi:BrandHosts:uniphar-group"];
+        if (string.IsNullOrEmpty(host))
+            throw new InvalidOperationException("UmbracoApi:BrandHosts:uniphar-group is not configured");
+        return host;
     }
 
     public async Task<List<PageModel>> GetNewBlogPosts()
@@ -17,15 +28,19 @@ public class BlogService
         var client = _httpClientFactory.CreateClient("UmbracoClient");
         var request = new HttpRequestMessage(HttpMethod.Get,
             "/umbraco/delivery/api/v2/content?fetch=children:/blog-posts/");
-        request.Headers.Add("Host", "uniphargroup.localhost");
+        request.Headers.Host = GroupHost();
         request.Headers.Add("Accept-Language", "en-US");
 
         var response = await client.SendAsync(request);
-        var json = await response.Content.ReadAsStringAsync();
+        response.EnsureSuccessStatusCode();
 
+        var json = await response.Content.ReadAsStringAsync();
         using var doc = JsonDocument.Parse(json);
-        var items = doc.RootElement.GetProperty("items");
+
         var result = new List<PageModel>();
+        if (!doc.RootElement.TryGetProperty("items", out var items)
+            || items.ValueKind != JsonValueKind.Array)
+            return result;
 
         foreach (var item in items.EnumerateArray())
             result.Add(MapNewBlogPost(item));
@@ -38,17 +53,17 @@ public class BlogService
         var client = _httpClientFactory.CreateClient("UmbracoClient");
         var request = new HttpRequestMessage(HttpMethod.Get,
             $"/umbraco/delivery/api/v2/content/item/blog-posts/{slug}");
-        request.Headers.Add("Host", "uniphargroup.localhost");
+        request.Headers.Host = GroupHost();
         request.Headers.Add("Accept-Language", "en-US");
 
         var response = await client.SendAsync(request);
-        if (!response.IsSuccessStatusCode) return null;
+        if (response.StatusCode == HttpStatusCode.NotFound) return null;
+        response.EnsureSuccessStatusCode();
 
         var json = await response.Content.ReadAsStringAsync();
         using var doc = JsonDocument.Parse(json);
         return MapNewBlogPost(doc.RootElement);
     }
-
     private static PageModel MapNewBlogPost(JsonElement item)
     {
         var props = item.GetProperty("properties");
@@ -88,16 +103,16 @@ public class BlogService
 
         return new PageModel
         {
-            Id = item.GetProperty("id").GetString(),
+            Id = item.GetProperty("id").GetString() ?? string.Empty,
             Title = title ?? slug,
             Slug = slug,
             ContentType = "blogPost",
             HeroHeading = title,
             HeroSubtext = $"By {author} — {publishDate?.Split('T')[0]}",
             HeroImageUrl = heroImageUrl,
-            BodyContent = UmbracoMapper.ResolveMediaUrls(bodyMarkup),
-            SidebarContent = $"<p><strong>Author:</strong> {author}</p>" +
-                            $"<p><strong>Published:</strong> {publishDate?.Split('T')[0]}</p>",
+            BodyContent = UmbracoMapper.ResolveMediaUrls(bodyMarkup ?? string.Empty),
+            SidebarContent = $"<p><strong>Author:</strong> {WebUtility.HtmlEncode(author)}</p>" +
+                    $"<p><strong>Published:</strong> {publishDate?.Split('T')[0]}</p>",
             MetaTitle = title,
             MetaDescription = null,
             FeaturedSections = new List<NavigationCardModel>(),
