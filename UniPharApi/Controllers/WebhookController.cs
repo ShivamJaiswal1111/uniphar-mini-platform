@@ -22,7 +22,7 @@ public class WebhookController : ControllerBase
 
     [HttpPost("content-published")]
     [EnableRateLimiting("webhook")]
-    public async Task<IActionResult> ContentPublished([FromBody] WebhookPayload payload)
+    public async Task<IActionResult> ContentPublished()
     {
         var expectedKey = _config["ManagementApi:ApiKey"];
         var providedKey = Request.Headers["X-Api-Key"].FirstOrDefault();
@@ -33,15 +33,36 @@ public class WebhookController : ControllerBase
             return Unauthorized(new { error = "Invalid or missing API key" });
         }
 
+        var eventAlias = Request.Headers["Umb-Webhook-Event"].FirstOrDefault();
+
+        // Umbraco sends the content item as the body. Log identifiers only; the body is
+        // informational, so an unreadable body must never stop the cache from being cleared.
+        string? contentId = null;
+        string? contentType = null;
+        try
+        {
+            using var doc = await System.Text.Json.JsonDocument.ParseAsync(Request.Body);
+            if (doc.RootElement.ValueKind == System.Text.Json.JsonValueKind.Object)
+            {
+                if (doc.RootElement.TryGetProperty("id", out var id)
+                    && id.ValueKind == System.Text.Json.JsonValueKind.String)
+                    contentId = id.GetString();
+
+                if (doc.RootElement.TryGetProperty("contentType", out var ct)
+                    && ct.ValueKind == System.Text.Json.JsonValueKind.String)
+                    contentType = ct.GetString();
+            }
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            // empty or non-JSON body: fine
+        }
+
         _logger.LogInformation(
-            "Webhook received — Event: {EventName} | ContentType: {ContentType} | ContentId: {ContentId}",
-            payload.EventName,
-            payload.ContentTypeAlias,
-            payload.ContentId
-        );
+            "Webhook received — Event: {Event} | ContentType: {ContentType} | ContentId: {ContentId}",
+            eventAlias, contentType, contentId);
 
         var newVersion = await _cache.BumpVersionAsync();
-
         _logger.LogInformation("Content cache version bumped to {Version}", newVersion);
 
         return Ok(new { message = "Cache invalidated", version = newVersion });
