@@ -47,7 +47,7 @@ public class SearchService
         {
             try
             {
-                var rawJson = await _umbracoService.GetContentByType(contentType, culture);
+                var rawJson = await _umbracoService.GetContentByTypeWithFallback(contentType, culture);
                 using var doc = JsonDocument.Parse(rawJson);
 
                 if (doc.RootElement.TryGetProperty("items", out var items) &&
