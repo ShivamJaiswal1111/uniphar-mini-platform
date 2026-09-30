@@ -162,6 +162,13 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
                   ?? Array.Empty<string>();
     foreach (var proxy in proxies)
         options.KnownProxies.Add(System.Net.IPAddress.Parse(proxy));
+    // App Service front-end IPs are not stable, so pinning KnownProxies is not practical there.
+    // Only enable this where the app is reachable solely through the platform's proxy.
+    if (builder.Configuration.GetValue<bool>("ForwardedHeaders:TrustAllProxies"))
+    {
+        options.KnownProxies.Clear();
+        options.KnownIPNetworks.Clear();
+    }
 });
 
 var app = builder.Build();
