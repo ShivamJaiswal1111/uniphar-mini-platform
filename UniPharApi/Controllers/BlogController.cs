@@ -41,7 +41,11 @@ public class BlogController : ControllerBase
         var posts = await _blogService.GetNewBlogPosts();
         var json = JsonSerializer.Serialize(posts, JsonOptions);
 
-        await _cache.SetAsync(cacheKey, json, TimeSpan.FromMinutes(10));
+        // Don't cache an empty list: it would be served for 10 minutes even after posts are published.
+        if (posts != null && posts.Any())
+            await _cache.SetAsync(cacheKey, json, TimeSpan.FromMinutes(10));
+        else
+            Console.WriteLine($"[CACHE SKIP] {cacheKey} - empty blog list");
 
         return Content(json, "application/json");
     }
