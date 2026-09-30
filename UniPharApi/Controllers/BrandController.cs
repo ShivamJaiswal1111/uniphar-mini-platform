@@ -18,8 +18,8 @@ public class BrandController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAllBrands([FromQuery] string culture = "en-US")
     {
-        var content = await _umbracoService.GetContentByType("homePage", culture);
-        return Ok(UmbracoMapper.MapToBrandList(content, culture));
+        var raw = await _umbracoService.GetContentByTypeWithFallback("homePage", culture);
+        return Ok(UmbracoMapper.MapToBrandList(raw, culture));
     }
 
     [HttpGet("{brandSlug}")]
