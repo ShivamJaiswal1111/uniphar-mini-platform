@@ -7,6 +7,8 @@ public class UmbracoMapperTests
 {
     // Builds a minimal Umbraco page JSON. $$""" lets {{x}} insert a value
     // while single { } stay literal, which JSON needs.
+
+    // //Data mapping logic (Umbraco JSON → clean models) is correct in isolation
     private static string PageJson(string routePath, string propertiesJson = "{}") => $$"""
     {
       "contentType": "standardPage",

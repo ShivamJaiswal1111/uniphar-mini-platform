@@ -6,6 +6,9 @@ namespace UniPharApi.Tests;
 
 public class UmbracoPageTests : IClassFixture<CustomWebApplicationFactory>
 {
+
+    // //Page mapping is correct end-to-end, repeat requests are served from cache (1 upstream call, not 2),
+    //  //culture header passthrough works
     private readonly CustomWebApplicationFactory _factory;
     private readonly HttpClient _client;
 

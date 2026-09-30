@@ -7,7 +7,10 @@ namespace UniPharApi.Tests;
 
 public class AuthTests : IClassFixture<CustomWebApplicationFactory>
 {
+
+    // //Login rejects wrong password, issues a real JWT on success, /me rejects no token and accepts a valid one
     private readonly HttpClient _client;
+
 
     public AuthTests(CustomWebApplicationFactory factory)
     {

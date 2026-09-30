@@ -8,6 +8,8 @@ using Microsoft.Extensions.DependencyInjection;
 namespace UniPharApi.Tests;
 
 // An IDistributedCache where every operation fails, like Redis being down
+
+// //If Redis/cache throws, the API still returns 200 instead of crashing (fail-open behavior)
 public class ThrowingCache : IDistributedCache
 {
     private static InvalidOperationException Down() => new("Simulated Redis outage");

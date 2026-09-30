@@ -4,6 +4,9 @@ namespace UniPharApi.Tests;
 
 public class UmbracoProxyTests : IClassFixture<CustomWebApplicationFactory>
 {
+
+    // //Umbraco failures translate correctly — 500→502, 404→404, network exception→502, timeout→504 — plus a culture-fallback check
+    //  //(missing translation → exactly 2 upstream calls, English retry, correct host header)
     private readonly CustomWebApplicationFactory _factory;
     private readonly HttpClient _client;
 
