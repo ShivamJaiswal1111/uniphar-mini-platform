@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard } from './guards/auth.guard';
+
 
 export const routes: Routes = [
   {
@@ -24,7 +24,6 @@ export const routes: Routes = [
     path: 'sustainability',
     loadComponent: () =>
       import('./pages/sustainability/sustainability').then(m => m.Sustainability),
-    canActivate: [authGuard],
     pathMatch: 'full'
   },
   {
