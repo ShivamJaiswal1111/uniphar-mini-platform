@@ -6,11 +6,6 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddHttpClient();
 
-if (builder.Environment.IsProduction())
-{
-    builder.WebHost.UseStaticWebAssets(); // Production-mode-from-source only — remove before publish/deploy
-}
-
 builder.CreateUmbracoBuilder()
     .AddBackOffice()
     .AddWebsite()
