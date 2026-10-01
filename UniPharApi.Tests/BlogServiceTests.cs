@@ -53,6 +53,6 @@ public class BlogServiceTests
 
         await client.GetAsync("/api/blog");
 
-        Assert.Equal("uniphargroup.localhost:44335", factory.Umbraco.Requests[0].Host);
+        Assert.Equal("uniphar-group", factory.Umbraco.Requests[0].StartItem);
     }
 }

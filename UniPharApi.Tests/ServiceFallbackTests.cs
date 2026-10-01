@@ -64,7 +64,7 @@ public class ServiceFallbackTests
         Assert.All(requests, r =>
         {
             Assert.Equal("/umbraco/delivery/api/v2/content/item/does-not-exist", r.PathAndQuery);
-            Assert.Equal("unimedtech.localhost:44335", r.Host);
+            Assert.Equal("uniphar-medtech", r.StartItem);
         });
     }
 

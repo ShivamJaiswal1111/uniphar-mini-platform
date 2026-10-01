@@ -2,7 +2,7 @@ using System.Net;
 
 namespace UniPharApi.Tests;
 
-public record CapturedRequest(string PathAndQuery, string? Host, string AcceptLanguage);
+public record CapturedRequest(string PathAndQuery, string? Host, string AcceptLanguage, string? StartItem = null);
 
 public class FakeUmbracoHandler : HttpMessageHandler
 {
@@ -29,8 +29,8 @@ public class FakeUmbracoHandler : HttpMessageHandler
             : "";
 
         lock (_requests)
-            _requests.Add(new CapturedRequest(request.RequestUri!.PathAndQuery, request.Headers.Host, lang));
-
+            _requests.Add(new CapturedRequest(request.RequestUri!.PathAndQuery, request.Headers.Host, lang,
+            request.Headers.TryGetValues("Start-Item", out var startItemValues) ? startItemValues.FirstOrDefault() : null));
         return Task.FromResult(Responder(request));
     }
 }

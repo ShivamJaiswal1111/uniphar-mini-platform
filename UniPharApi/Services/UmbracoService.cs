@@ -36,7 +36,8 @@ public class UmbracoService
         var client = _httpClientFactory.CreateClient("UmbracoClient");
         var request = new HttpRequestMessage(HttpMethod.Get,
             $"/umbraco/delivery/api/v2/content/item{domainRelativePath}");
-        request.Headers.Host = ResolveHostname(brandSlug);
+        _ = ResolveHostname(brandSlug); // only validates the brand; unknown slugs throw a 404
+        request.Headers.Add("Start-Item", brandSlug);
         request.Headers.Add("Accept-Language", culture);
 
         var response = await client.SendAsync(request);

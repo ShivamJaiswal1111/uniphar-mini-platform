@@ -28,7 +28,8 @@ public class BlogService
         var client = _httpClientFactory.CreateClient("UmbracoClient");
         var request = new HttpRequestMessage(HttpMethod.Get,
             "/umbraco/delivery/api/v2/content?fetch=children:/blog-posts/");
-        request.Headers.Host = GroupHost();
+        _ = GroupHost(); // only validates that the Group brand is configured
+        request.Headers.Add("Start-Item", "uniphar-group");
         request.Headers.Add("Accept-Language", "en-US");
 
         var response = await client.SendAsync(request);
@@ -53,7 +54,8 @@ public class BlogService
         var client = _httpClientFactory.CreateClient("UmbracoClient");
         var request = new HttpRequestMessage(HttpMethod.Get,
             $"/umbraco/delivery/api/v2/content/item/blog-posts/{slug}");
-        request.Headers.Host = GroupHost();
+        _ = GroupHost(); // only validates that the Group brand is configured
+        request.Headers.Add("Start-Item", "uniphar-group");
         request.Headers.Add("Accept-Language", "en-US");
 
         var response = await client.SendAsync(request);
